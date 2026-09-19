@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>한국 관세 아틀라스 (프로토타입)</title>
+<title>한국 관세 아틀라스 — HSK 10단위 관세율 찾아보기</title>
+<meta name="description" content="HSK 10단위 코드 11,326개를 검색해 원산지별 관세율을 견주고, 2007~2026년 세율 이력과 수입 실적을 함께 본다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -19,6 +20,8 @@
   .searchbox input::placeholder{color:var(--muted)}
   .searchbox .cnt{color:var(--muted);font-size:.84rem;white-space:nowrap;padding-right:6px;
     font-variant-numeric:tabular-nums}
+  .topnav{color:var(--muted);font-size:.86rem;margin:0 0 16px}
+  .topnav a{font-weight:600}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
   .chip{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:5px 12px;
     font:inherit;font-size:.85rem;cursor:pointer;font-weight:600;color:var(--ink)}
@@ -77,9 +80,9 @@
     <div class="brand">
       <h1>한국 관세 아틀라스</h1>
       <span class="wordmark">Korea Tariff Atlas</span>
-      <span class="badge">PROTOTYPE</span>
     </div>
     <p class="lede">HSK 10단위 코드 하나하나에 대해 <b>어느 나라에서 들여오면 관세가 얼마인지</b>, 그 세율이 <b>20년 동안 어떻게 바뀌었는지</b>, 그리고 <b>실제로 얼마가 그 세율을 만났는지</b>를 함께 보여 준다. 세율은 <a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a>, 무역액은 <a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a>에서 왔다.</p>
+    <p class="topnav"><a href="index.html">류로 찾아보기</a> · 코드 하나의 정본은 <b>소호 페이지</b>이고, 이 화면은 찾아보고 견주는 자리다</p>
   </div>
 </header>
 
@@ -91,7 +94,7 @@
       <button role="tab" aria-selected="false" aria-controls="tab-org"  id="t-org">원산지 비교</button>
       <button role="tab" aria-selected="false" aria-controls="tab-fta"  id="t-fta">FTA 시계</button>
       <button role="tab" aria-selected="false" aria-controls="tab-chg"  id="t-chg">올해 바뀐 것</button>
-      <button role="tab" aria-selected="false" aria-controls="tab-about" id="t-about">이 시안에 대하여</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-about" id="t-about">이 자료에 대하여</button>
     </div>
   </div>
 </nav>
@@ -101,7 +104,7 @@
 <!-- ================= 관세 여권 ================= -->
 <section role="tabpanel" id="tab-pp" aria-labelledby="t-pp" class="active">
   <h2 class="h">관세 여권</h2>
-  <p class="sub lead">코드 하나에 대한 모든 것을 카드 한 장으로. 실제 서비스에서는 이 카드가 코드마다 독립된 주소(<code>/hs/0904210000</code>)를 가져 검색엔진에 색인된다 — 방문자를 데려오는 것은 이 페이지들이다.</p>
+  <p class="sub lead">코드나 품목명을 넣으면 원산지별 세율을 한눈에 견줄 수 있다. 그 코드의 <b>정본은 소호 페이지</b>(<code>/hs/090421.html</code>)이고, 명칭 계층·상대국 전체·관용명·형제 소호가 거기 있다 — 카드 아래 링크로 간다.</p>
 
   <div class="searchbox">
     <input id="q" type="search" placeholder="HS 코드나 품목명 (예: 0904, 천연가스, 후추, 스마트폰)" autocomplete="off" aria-label="품목 검색">
@@ -173,53 +176,44 @@
   <p class="sub lead">해가 바뀔 때마다 자동으로 만들어지는 화면이다. 갱신 스크립트를 돌리면 이 목록이 새로 생기고, 그 자체가 그해의 뉴스거리가 된다.</p>
   <div class="stats" id="chgstats"></div>
   <div id="tb-chg"></div>
-  <p class="sub">무협정 원산지에 적용되는 실행세율(MFN 기준) 기준. 협정세율의 연간 철폐 단계는 여기 포함하지 않았다 — 실제 서비스에서는 상대별로 따로 보여 주는 편이 낫다.</p>
+  <p class="sub">무협정 원산지에 적용되는 실행세율(MFN 기준) 기준. 협정세율의 연간 철폐 단계는 여기 넣지 않았다. 상대별 철폐는 <a href="#" onclick="showTab('fta');return false">FTA 시계</a> 탭에서 본다.</p>
 </section>
 
-<!-- ================= 이 시안에 대하여 ================= -->
+<!-- ================= 이 자료에 대하여 ================= -->
 <section role="tabpanel" id="tab-about" aria-labelledby="t-about">
-  <h2 class="h">이 시안에 대하여</h2>
-  <p class="sub lead">무엇을 보여 주려고 만들었는지, 실제 서비스로 옮길 때 무엇이 달라지는지.</p>
+  <h2 class="h">이 자료에 대하여</h2>
+  <p class="sub lead">이 사이트가 무엇으로 이루어져 있고, 어디서 온 자료이며, 무엇을 답하지 못하는지.</p>
 
   <div class="note warn">
-    <b>고지.</b> 관세법령정보포털은 10단위 세율이 참고용이며 법적 효력이 없다고 밝힌다. 실행세율은 KCSTARIFF가 관세법 제50조를 해석해 만든 파생값이다. 세액 계산이나 수입신고에는 관세법 별표 관세율표와 해당 규정(조정·할당·양허관세 규정, FTA 협정문)의 원문을 확인해야 한다. 이 화면은 설계 시안이며 검증을 거치지 않았다.
+    <b>고지.</b> 관세법령정보포털은 10단위 세율이 참고용이며 법적 효력이 없다고 밝힌다. 실행세율은 KCSTARIFF가 관세법 제50조를 해석해 만든 파생값이다. 세액 계산이나 수입신고에는 관세법 별표 관세율표와 해당 규정(조정·할당·양허관세 규정, FTA 협정문)의 원문을 확인해야 한다.
   </div>
 
-  <h3>어느 계열의 화면인가</h3>
-  <p class="sub">대시보드를 두 갈래로 나눈다. <b>DB 소개형</b>은 「이 자료가 무엇이고 어떻게 만들었나」에 답하고(<a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a>·<a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a>), <b>아틀라스형</b>은 「이 자료로 무엇을 보나」에 답한다(<a href="https://pilsunchoi.github.io/TradeNetworkAtlas/" target="_blank" rel="noopener">Trade Network Atlas</a>·<a href="https://pilsunchoi.github.io/MaritimePulseAtlas/" target="_blank" rel="noopener">Maritime Pulse Atlas</a>). 이 화면은 아틀라스형이고, 앞의 두 아틀라스와 같은 토큰·글꼴을 쓴다.</p>
-  <div class="tblwrap tw"><table>
-    <thead><tr><th>구분</th><th>DB 소개형</th><th>아틀라스형</th></tr></thead>
+  <h3>화면이 둘인 이유</h3>
+  <p class="sub">같은 자료를 두 가지로 보여 준다. 역할이 다르고, 겹치지 않게 나눠 두었다.</p>
+  <div class="tw"><table>
+    <thead><tr><th>화면</th><th>무엇에 답하나</th><th>표면</th></tr></thead>
     <tbody>
-      <tr><td>답하는 질문</td><td>무엇이고 어떻게 만들었나</td><td>이 자료로 무엇을 보나</td></tr>
-      <tr><td>독자</td><td>연구자·재현하려는 사람</td><td>실무자·기자·일반</td></tr>
-      <tr><td>표면</td><td>밝은 배경, 시스템 글꼴</td><td>다크 <code>#0E1116</code>, Instrument Sans + IBM Plex Sans KR</td></tr>
+      <tr><td><a href="index.html">소호 페이지</a> 5,612쪽<br><span class="cap">+ 호 1,228 · 류 96</span></td><td><b>이 코드 하나의 정본.</b> 명칭 계층, 10단위별 원산지 세율표, 상대국 5, 평균 단가, 관용명, 형제 소호. 검색으로 들어와 읽고 인쇄하는 자리다</td><td>라이트</td></tr>
+      <tr><td>이 대시보드</td><td><b>찾아보고 견주는 자리.</b> 11,326코드 검색, 원산지별 이력 겹쳐 보기, 그리고 코드 하나로는 안 보이는 것 — 실효관세 지도·원산지 비교·FTA 시계·올해 바뀐 것</td><td>다크</td></tr>
     </tbody>
   </table></div>
-  <p class="sub">아틀라스형 안에서도 표면이 둘이다. <b>탐색 도구인 이 화면은 다크</b>, <b>검색으로 들어와 읽고 인쇄하는 코드별 정적 페이지는 같은 토큰의 라이트 변종</b>이다. 자동 반전이 아니라 각각 고른 값이며, 정본은 <code>assets/atlas-base.css</code> 한 파일이다. 다른 아틀라스는 이 파일을 복사해 쓴다 — CDN 링크로 묶지 않아 한 곳이 깨져도 나머지는 산다.</p>
-  <p class="sub">글꼴은 라틴과 한글을 나눠 맡긴다. Instrument Serif·Sans에는 한글이 없어 한글은 IBM Plex Sans KR이 받는다(허브 <a href="https://pilsunchoi.github.io/" target="_blank" rel="noopener">pilsunchoi.github.io</a>와 같은 글꼴). 그래서 영문 이름은 아틀라스 특유의 세리프로, 한글 본문은 또렷한 고딕으로 나온다.</p>
+  <p class="sub">그래서 카드는 미리보기로 두고, 코드 하나를 제대로 보려면 소호 페이지로 넘긴다. 같은 것을 두 군데서 다르게 보여 주지 않기 위해서다. 두 화면은 <code>assets/atlas-base.css</code> 한 파일에서 색과 글꼴을 받아 가며, 표면만 다르게 골랐다 — 자동 반전이 아니다.</p>
+  <p class="sub">이 사이트는 <a href="https://pilsunchoi.github.io/TradeNetworkAtlas/" target="_blank" rel="noopener">Trade Network Atlas</a>·<a href="https://pilsunchoi.github.io/MaritimePulseAtlas/" target="_blank" rel="noopener">Maritime Pulse Atlas</a>와 같은 디자인을 쓴다. 글꼴은 라틴과 한글을 나눠 맡겨, 영문 이름은 Instrument Serif로 한글 본문은 IBM Plex Sans KR로 나온다(허브 <a href="https://pilsunchoi.github.io/" target="_blank" rel="noopener">pilsunchoi.github.io</a>와 같은 글꼴). 자료 자체가 어떻게 만들어졌는지는 <a href="https://pilsunchoi.github.io/KCSTARIFF/" target="_blank" rel="noopener">관세율 DB 소개</a>에 있다.</p>
 
-  <h3>이 시안이 증명하려는 것</h3>
-  <ol>
-    <li><b>코드별 페이지가 엔진이다.</b> 「관세 여권」 탭의 카드가 실제 서비스에서는 코드마다 독립 주소를 갖는다. HS10 전부면 11,326쪽, HS6까지만 해도 5,600쪽이 검색엔진에 색인된다. 기존 두 아틀라스가 단일 페이지라 갖지 못한 유입 경로다.</li>
-    <li><b>세율만으로는 부족하고, 무역액과 붙어야 의미가 생긴다.</b> 「이 코드에 작년에 얼마가 들어왔고 어디서 왔는가」가 붙는 순간 세율표가 의사결정 도구가 된다.</li>
-    <li><b>시계열이 차별점이다.</b> CLIP·TradeNAVI·FTA포털은 전부 현재 시점 조회다. 20년 이력은 이 DB에만 있다.</li>
-    <li><b>종량세 손익분기</b>는 어디에도 없는 기능이다. 선택세율 품목에서 신고단가가 하한 아래로 내려가면 종량세가 적용된다는 사실을 계산해 보여 준다.</li>
-  </ol>
-
-  <h3>실제 서비스로 옮길 때 달라지는 것</h3>
+  <h3>어떻게 만들었나</h3>
   <ul>
-    <li><b>데이터 적재.</b> 이 시안은 데이터 전부(<span id="dsize"></span>)를 한 파일에 담아 로드한다. 실제로는 <code>fct_applied_rate.parquet</code>(2.2MB)을 DuckDB-WASM으로 브라우저에서 직접 질의하거나, 코드 페이지를 빌드 시점에 정적 생성한다. 어느 쪽이든 서버는 필요 없다.</li>
-    <li><b>파일 하나로 다 담은 탓</b>에 초기 로딩이 무겁다. 실제 서비스에서는 코드 페이지를 빌드 시점에 정적 생성하므로 방문자는 자기가 찾는 코드의 데이터만 받는다.</li>
-    <li><b>관용명 사전은 초안까지 와 있다.</b> 관세율표의 법정 품명만 훑으면 「승용차」로는 아무것도 안 나온다 — 제8703호의 법정 표현은 「승용자동차와 그 밖의 사람을 수송할 수 있도록 주로 설계된 차량」이다. 그래서 사람들이 실제로 치는 말을 코드에 잇는 사전(<code>관용명_사전.csv</code>)을 만들어 붙였다. 항목 <b id="synN"></b>개·검색어 <b id="synW"></b>개로 HSK 코드의 <b id="synC"></b>%, <b id="synV"></b>년 수입액의 <b id="synVp"></b>%를 덮는다. 검색창에 「소고기」·「노트북」·「삼겹살」을 쳐 보면 작동한다. 남은 일은 범위를 넓히고(현재 소비재·1차산품 위주), 실제 검색어 로그로 다듬는 것이다.</li>
+    <li><b>코드별 페이지는 빌드 시점에 찍어 낸다.</b> 방문자는 자기가 찾는 코드의 쪽 하나만 받는다. 이 대시보드만 자료 전부(<span id="dsize"></span>)를 한 파일로 읽는다 — 검색과 집계 탭이 전 코드를 한꺼번에 봐야 하기 때문이다.</li>
+    <li><b>관용명 사전.</b> 관세율표의 법정 품명만 훑으면 「승용차」로는 아무것도 안 나온다 — 제8703호의 법정 표현은 「승용자동차와 그 밖의 사람을 수송할 수 있도록 주로 설계된 차량」이다. 그래서 사람들이 실제로 치는 말을 코드에 잇는 사전(<code>관용명_사전.csv</code>)을 만들어 붙였다. 항목 <b id="synN"></b>개·검색어 <b id="synW"></b>개로 HSK 코드의 <b id="synC"></b>%, <b id="synV"></b>년 수입액의 <b id="synVp"></b>%를 덮는다. 검색창에 「소고기」·「노트북」·「삼겹살」을 쳐 보면 된다. 아직 얇은 곳은 중간재·부품인데, 그쪽은 법정 명칭이 곧 업계 용어라 사전이 덜 필요하다.</li>
     <li><b>호·소호 명칭</b>은 관세법 별표 관세율표 HWP(2025년 시행판)에서 뽑았다. 류 96개·호 1,228개·소호그룹 1,023개·소호 5,612개 전부를 읽어 빈 곳이 없다. 표의 행마다 칸 수가 달라(소호가 「00」 하나뿐인 호는 호 이름 행이 없고, 소호그룹 행은 세율 칸이 없다) 처음에는 호 271개와 소호 1개를 놓쳤는데, 칸 수를 고정하지 않고 행 머리를 찾는 방식으로 고쳤다.</li>
-    <li><b>월 단위 갱신.</b> 세율은 1월에 한 번 바뀌지만 무역액은 매달 갱신된다. 「이 달의 수입과 관세」를 홈에 두면 KCSDB2 파이프라인에 얹혀 사이트가 매달 살아 움직인다 — 연 1회 갱신 사이트가 죽는 문제의 해법이다.</li>
+    <li><b>갱신.</b> 세율은 해마다 1월에 바뀌고, 무역액은 KCSDB2에서 매달 갱신된다. 다시 만드는 절차는 <a href="https://github.com/pilsunchoi/KoreaTariffAtlas" target="_blank" rel="noopener">저장소</a>의 README에 있다.</li>
   </ul>
 
-  <h3>이 DB가 답하지 못하는 것 — 화면에 명시해야 한다</h3>
+  <h3>이 자료가 답하지 못하는 것</h3>
   <ul>
-    <li><b>명목이지 실제가 아니다.</b> 위에서 계산한 관세액은 법정 실행세율 × 수입액이다. 감면·면세·환급·보세가 빠져 있어 실제 관세 수입(연 7~8조원대)보다 훨씬 크다. 「명목 기준, 감면 전」이라고 반드시 붙여야 한다.</li>
-    <li><b>FTA 세율은 신청했을 때 적용될 수 있는 세율</b>이지 실제로 적용된 세율이 아니다. 원산지증명을 못 받아 MFN을 낸 물량이 섞여 있다. 그래서 「절감액」은 상한 추정이다.</li>
-    <li><b>협정 일곱 개만</b> 담겨 있다(중국·EU·미국·아세안·인도·베트남·캐나다 + APTA). 호주·RCEP·영국·중미 등은 주요세율보기 화면에 열이 없어 빠졌다.</li>
+    <li><b>명목이지 실제가 아니다.</b> 화면의 관세액은 법정 실행세율 × 수입액이다. 감면·면세·환급·보세가 빠져 있어 실제 관세 수입(연 7~8조원대)보다 훨씬 크다. 「명목 기준, 감면 전」으로 읽어야 한다.</li>
+    <li><b>FTA 세율은 신청했을 때 적용될 수 있는 세율</b>이지 실제로 적용된 세율이 아니다. 원산지증명을 못 받아 MFN을 낸 물량이 섞여 있다. 그래서 「깎인 몫」은 상한 추정이다.</li>
+    <li><b>협정 일곱 개만</b> 담겨 있다(중국·EU·미국·아세안·인도·베트남·캐나다 + APTA). 호주·RCEP·영국·중미 등은 원자료 화면에 열이 없어 빠졌다.</li>
+    <li><b>검색은 사전이 덮는 만큼만 된다.</b> 법정 품명에 없는 말은 관용명 사전에 등록된 것만 찾힌다.</li>
     <li><b>1월 1일 기준</b>이라 하반기에 지정되는 할당관세 같은 연중 변경은 놓칠 수 있다.</li>
   </ul>
 
@@ -238,7 +232,7 @@
 </div></main>
 
 <footer><div class="wrap">
-  <span class="ver">설계 시안 · <span class="gen"></span> 생성</span>
+  <span class="ver">세율 2026년 · 무역액 <span class="tl"></span> · <span class="gen"></span> 갱신</span>
   <p>세율 <a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a> · 무역통계 <a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a> · 원자료 관세청 관세법령정보포털(공공누리 제1유형)</p>
   <p>이 화면의 수치는 참고용이며 법적 효력이 없다.</p>
 </div></footer>
@@ -433,7 +427,7 @@ function openCard(i){
   if(fl&16) badges.push(['fail','세율 미확정']);
   if(!badges.length) badges.push(['ok','종가세 · 단순 구조']);
 
-  const top3=r[C.top3]||[], t3max=top3.length?top3[0][1]:1;
+  const top3=r[C.top3]||[];
   const hist=parseHist(r[C.hist]), ohist=parseOHist(r[C.ohist]);
 
   let be='';
@@ -464,18 +458,18 @@ function openCard(i){
       </div>
       <div class="ppbox">
         <h4>${D.meta.trade_year}년 수입 실적</h4>
-        ${r[C.imp_musd]>0?`<p style="margin:0 0 8px"><b style="font-size:1.3rem">${musd(r[C.imp_musd])}</b>
+        ${r[C.imp_musd]>0?`<p style="margin:0 0 6px"><b style="font-size:1.3rem">${musd(r[C.imp_musd])}</b>
           <span class="cap" style="display:inline"> · 명목 관세 약 ${musd(r[C.imp_musd]*(rates[0][1]||0)/100)}(무협정 기준)</span></p>
-        <div class="bars">${top3.map(([ci,v])=>`<span class="lb">${esc(D.countries[ci])}</span>
-          <span class="tr"><span class="fl" style="width:${Math.max(2,100*v/t3max)}%"></span></span>
-          <span class="vl">${musd(v)}</span>`).join('')}</div>
-        <p class="cap">상위 3개국. 실제 서비스에서는 전체 원산지와 월별 추이를 붙인다.</p>`
+        <p class="cap">${top3.map(([ci,v])=>`${esc(D.countries[ci])} ${fmt(100*v/r[C.imp_musd],0)}%`).join(' · ')}${top3.length?' — 상대국 전체는 소호 페이지에 있다':''}</p>`
         :'<p class="cap">이 코드로 신고된 수입이 없다.</p>'}
         <h4 style="margin-top:16px">세율 이력 ${ohist.length?'(원산지별)':'(무협정 기준)'}</h4>
         <div id="pphist"></div>
       </div>
     </div>
-    <p class="cap" style="margin-top:14px">실제 서비스에서는 이 카드가 <code>/hs/${hs}</code> 주소를 갖고, 아래에 관련 코드·법령 근거·원문 링크가 붙는다.</p>
+    <p class="btnrow" style="margin-top:16px">
+      <a class="btn primary" href="hs/${hs.slice(0,6)}.html">이 코드 자세히 보기 — HS ${hs.slice(0,4)}.${hs.slice(4,6)} 소호 페이지</a>
+    </p>
+    <p class="cap">소호 페이지에는 명칭 계층, 같은 소호의 10단위 코드 전부, 상대국 5개국, 평균 수입단가, 관용명, 같은 호의 다른 소호가 있다.</p>
   </div>`;
   drawHist(document.getElementById('pphist'), hist, ohist, r);
   location.hash='hs='+hs;

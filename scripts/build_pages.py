@@ -501,7 +501,8 @@ for root, _, fs in os.walk(OUT):
             continue
         fp = os.path.join(root, f)
         for h in _pat.findall(open(fp, encoding='utf-8').read()):
-            if h.startswith(('http://', 'https://', 'mailto:')):
+            # atlas.html 의 `hs/${...}.html` 처럼 실행할 때 만들어지는 주소는 셀 수 없다
+            if h.startswith(('http://', 'https://', 'mailto:')) or '${' in h:
                 continue
             nlink += 1
             if not os.path.exists(os.path.normpath(os.path.join(root, h))):

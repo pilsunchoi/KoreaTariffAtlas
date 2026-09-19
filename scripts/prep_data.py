@@ -1,4 +1,5 @@
-# Korea Tariff Atlas 프로토타입 데이터 추출
+# 대화형 대시보드(atlas.html)가 읽는 자료를 만든다 → docs/atlas-data.js
+#   python scripts/prep_data.py
 import duckdb, json, os, sys
 
 from paths import DATA, DOCS, TAR, TRD  # noqa: E402
