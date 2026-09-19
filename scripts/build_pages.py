@@ -419,7 +419,10 @@ body = [f'<h1>한국 관세 아틀라스</h1>',
         f'소호 {len(H6):,}개 · 호 {len(H4):,}개 · 류 {len(H2)}개의 페이지가 있다.</p>',
         f'<p class="btnrow"><a class="btn primary" href="atlas.html">대화형 대시보드에서 검색</a></p>',
         '<h2>류로 찾기</h2><div class="chgrid">' + cards + '</div>']
-total += shell('index.html', '한국 관세 아틀라스 — HSK 10단위 관세율',
+# 즐겨찾기·탭·형제 아틀라스와의 줄맞춤을 위해 이름은 영어를 앞세우고,
+# 검색 결과에서 무엇인지 알 수 있게 한글 부제를 뒤에 남긴다.
+# 코드 페이지(hs/*.html)는 반대다 — 한국어 검색으로 들어오는 자리라 한글이어야 한다.
+total += shell('index.html', 'Korea Tariff Atlas · 한국 HSK 10단위 관세율',
                f'한국의 HSK 10단위 관세율을 코드·원산지·연도별로. 소호 {len(H6):,}개 페이지.',
                '\n'.join(body), 'index.html', [])
 urls.append(('index.html', 1e18))
