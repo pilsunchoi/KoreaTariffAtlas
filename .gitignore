@@ -1,0 +1,14 @@
+# 세율·무역통계 DB는 여기 두지 않는다 — KCSTARIFF와 KCSDB2에서 읽는다
+*.duckdb
+*.duckdb.wal
+*.parquet
+data/raw/
+
+logs/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# 로컬 도구 설정
+.claude/
+CLAUDE.md

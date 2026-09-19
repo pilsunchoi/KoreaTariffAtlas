@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Atlas Base — 아틀라스 계열 공용 디자인 토큰과 기본 골격
+   정본은 이 파일 하나다. 새 아틀라스는 이 파일을 복사해 쓰고, 고칠 일이 있으면
+   여기서 고쳐 각 저장소로 내린다(CDN 링크가 아니라 사본 — 한 곳이 깨져도 나머지는 산다).
+
+   표면이 둘이다. 자동 반전이 아니라 각각 고른 값이다.
+     · 기본(다크)  — 탐색 도구용. TradeNetworkAtlas·MaritimePulseAtlas와 같은 값.
+     · light 변종 — 읽는 문서용. <html data-surface="light">로 켠다.
+   검색으로 들어와 읽고 인쇄하는 화면은 light, 들여다보며 만지는 화면은 다크로 쓴다.
+
+   글꼴은 라틴과 한글을 나눠 맡긴다. Instrument Serif/Sans에는 한글이 없어
+   한글은 IBM Plex Sans KR이 받는다(허브 pilsunchoi.github.io와 같은 글꼴).
+   그래서 영문 이름(워드마크·숫자)은 아틀라스 특유의 세리프로, 한글 본문은
+   또렷한 고딕으로 나온다 — 두 아틀라스가 이미 그렇게 보이는 이유다.
+   ========================================================================== */
+
+:root{
+  /* ---- 표면: 다크(기본) — 기존 두 아틀라스와 동일한 값 ---- */
+  --bg:#0E1116; --panel:#161B23; --panel2:#1C222C;
+  --ink:#E6E9EF; --ink2:#B4BCC9; --muted:#8F98A8;
+  --line:#262D38; --line2:#343C49;
+  --accent:#5AB4FF; --accent-ink:#0E1116; --accent-soft:#16283A;
+  --warm:#F2B84B;
+
+  /* 상태 — 계열 색으로 돌려쓰지 않는다 */
+  --ok:#4FBF84; --ok-soft:#14301F;
+  --warn:#E0A83C; --warn-soft:#332616;
+  --info:#8FA0E8; --info-soft:#1C2238;
+  --danger:#E0715F; --danger-soft:#33191A;
+
+  /* 계열색 세 칸 — dataviz 기준 팔레트의 앞 세 슬롯(다크 단계) */
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+
+  /* 순차 램프: 100이 표면에 가깝고 700이 가장 두드러진다(값의 크기 순) */
+  --seq-100:#17304A; --seq-200:#1E4467; --seq-300:#275A86; --seq-400:#3272A6;
+  --seq-500:#4A8FC4; --seq-600:#79B4DD; --seq-700:#A9DBFF;
+
+  --grid:#222A35; --axis:#3A4351; --shadow:none;
+
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Instrument Sans","IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",
+         -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;
+
+  --radius:12px;
+  color-scheme:dark;
+}
+
+:root[data-surface="light"]{
+  /* ---- 표면: 라이트 — 읽는 문서용. 다크를 뒤집은 것이 아니라 따로 고른 값 ---- */
+  --bg:#F7F8FA; --panel:#FFFFFF; --panel2:#F1F3F7;
+  --ink:#101419; --ink2:#3C4450; --muted:#6B7482;
+  --line:#E2E6EC; --line2:#CFD5DE;
+  --accent:#1F6FB8; --accent-ink:#FFFFFF; --accent-soft:#E8F1FA;
+  --warm:#8A5B00;
+
+  --ok:#137A3F; --ok-soft:#E6F4EC;
+  --warn:#8A5B00; --warn-soft:#FDF3DF;
+  --info:#4B4F8A; --info-soft:#ECEDF7;
+  --danger:#A11111; --danger-soft:#FDECEC;
+
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+
+  --seq-100:#cde2fb; --seq-200:#9ec5f4; --seq-300:#6da7ec; --seq-400:#3987e5;
+  --seq-500:#256abf; --seq-600:#184f95; --seq-700:#0d366b;
+
+  --grid:#ECEFF3; --axis:#C8CFD8;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.10);
+  color-scheme:light;
+}
+
+/* ---------------------------------------------------------------- 바탕 */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans); line-height:1.6;
+  /* 한국어는 기본값이면 낱말 한가운데서 끊긴다 */
+  word-break:keep-all; overflow-wrap:break-word;
+  -webkit-text-size-adjust:100%; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+.wrap.narrow{max-width:880px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code,kbd,.mono{font-family:var(--mono);font-size:.9em}
+p{margin:8px 0}
+hr{border:0;border-top:1px solid var(--line);margin:24px 0}
+
+/* ---------------------------------------------------------------- 머리 */
+.atlas-top{background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding:22px 0 6px}
+.brand h1{font-size:1.72rem;font-weight:700;margin:0;letter-spacing:-.01em}
+/* 워드마크만 세리프 — Instrument Serif에는 한글이 없으므로 영문 이름에만 쓴다 */
+.wordmark{font-family:var(--serif);font-size:1.5rem;font-weight:400;color:var(--accent);
+  letter-spacing:.01em;line-height:1}
+.badge{border:1px solid var(--line2);color:var(--muted);border-radius:999px;
+  padding:2px 10px;font-size:.72rem;font-weight:600;letter-spacing:.08em;font-family:var(--mono)}
+.lede{color:var(--ink2);margin:0 0 16px;font-size:.98rem;max-width:80ch}
+
+/* ---------------------------------------------------------------- 탭 */
+nav.tabs{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabrow{display:flex;gap:4px;overflow-x:auto;padding:8px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabrow::-webkit-scrollbar{display:none}
+.tabrow button{flex:0 0 auto;border:1px solid transparent;background:transparent;color:var(--ink2);
+  font:inherit;font-weight:600;font-size:.95rem;padding:10px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.tabrow button:hover{color:var(--ink);background:var(--panel2)}
+.tabrow button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft);border-color:var(--line2)}
+
+/* ---------------------------------------------------------------- 본문 */
+main{padding:22px 0 8px}
+section[role=tabpanel]{display:none;animation:fade .18s ease}
+section[role=tabpanel].active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+h2.h{font-size:1.5rem;margin:2px 0 6px;letter-spacing:-.01em}
+h2{font-size:1.14rem;margin:28px 0 8px;letter-spacing:-.01em}
+h3{font-size:1.14rem;margin:28px 0 8px;letter-spacing:-.01em;
+  border-top:1px solid var(--line);padding-top:22px}
+h3:first-of-type{border-top:none;padding-top:0;margin-top:20px}
+.sub{color:var(--muted);margin:6px 0 14px;font-size:.94rem}
+.sub.lead{color:var(--ink);font-weight:600;font-size:1.02rem;margin:0 0 18px}
+.cap{color:var(--muted);font-size:.84rem;margin:6px 0}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px;margin:14px 0}
+.panel>:first-child{margin-top:0}
+.panel>:last-child{margin-bottom:0}
+
+/* ---------------------------------------------------------------- 수치 카드 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;box-shadow:var(--shadow)}
+.stat .n{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.2;
+  font-variant-numeric:tabular-nums}
+.stat .k{color:var(--muted);font-size:.82rem;margin-top:2px}
+.stat .d{color:var(--muted);font-size:.76rem;margin-top:4px;opacity:.85}
+
+/* ---------------------------------------------------------------- 표 */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:14px 0;
+  background:var(--panel);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.88rem;background:var(--panel)}
+caption{caption-side:top;text-align:left;font-weight:700;padding:10px 12px 4px;font-size:.92rem;color:var(--ink)}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{background:var(--panel2);color:var(--muted);font-weight:600;white-space:nowrap}
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
+tbody tr:hover td,tbody tr:hover th{background:var(--panel2)}
+td.r,th.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.lo{color:var(--ok);font-weight:700}
+td code{color:var(--ink2)}
+
+/* ---------------------------------------------------------------- 배지·상자 */
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.76rem;font-weight:700;line-height:1.7}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.info{background:var(--info-soft);color:var(--info)}
+.pill.fail{background:var(--danger-soft);color:var(--danger)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+
+.note{background:var(--info-soft);border:1px solid var(--line);border-left:3px solid var(--info);
+  border-radius:10px;padding:10px 14px;margin:14px 0;font-size:.9rem;color:var(--ink)}
+.note b{color:var(--info)}
+.note.warn{background:var(--warn-soft);border-left-color:var(--warn)}
+.note.warn b{color:var(--warn)}
+
+/* ---------------------------------------------------------------- 단추 */
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.btn{display:inline-block;padding:9px 16px;border-radius:9px;font-weight:600;font-size:.92rem;
+  border:1px solid var(--line2);background:var(--panel);color:var(--ink)}
+.btn:hover{text-decoration:none;border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{opacity:.9}
+.toggle{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;background:var(--panel)}
+.toggle button{border:0;background:transparent;font:inherit;font-size:.85rem;font-weight:600;
+  padding:6px 14px;cursor:pointer;color:var(--muted)}
+.toggle button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------------------------------------------------------------- 그림 */
+svg{display:block;max-width:100%;height:auto}
+.fig{margin:14px 0}
+.fig figcaption{color:var(--muted);font-size:.82rem;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:4px 0 8px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.ramp{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);margin:8px 0}
+.ramp i{width:26px;height:11px;display:inline-block}
+.tip{position:fixed;z-index:60;background:#0B0E13;color:#F2F4F8;border:1px solid #2B3340;
+  border-radius:8px;padding:7px 10px;font-size:.8rem;line-height:1.45;pointer-events:none;
+  opacity:0;transition:opacity .1s;max-width:270px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.tip .k{color:#98A2B3}
+
+details.tv{margin:10px 0}
+details.tv summary{cursor:pointer;color:var(--muted);font-size:.86rem;font-weight:600}
+
+/* ---------------------------------------------------------------- 꼬리 */
+footer{border-top:1px solid var(--line);margin-top:28px;padding:20px 0 40px;
+  background:var(--panel);color:var(--muted);font-size:.83rem}
+footer p{margin:6px 0}
+footer .ver{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+  border-radius:999px;padding:3px 12px;font-weight:700;color:var(--ink);margin-bottom:8px;
+  font-family:var(--mono);font-size:.78rem}
+
+@media (max-width:560px){
+  table{font-size:.85rem}
+  th,td{padding:7px 9px}
+  thead th{white-space:normal}
+}
+@media (max-width:420px){
+  .brand h1{font-size:1.4rem}
+  .wordmark{font-size:1.2rem}
+  .stat .n{font-size:1.26rem}
+  h2.h{font-size:1.3rem}
+}

@@ -1,0 +1,44 @@
+/* 코드 페이지 전용. 토큰과 공용 골격은 atlas-base.css에 있다(light 변종). */
+.wrap{max-width:880px}
+.atlas-top.compact{padding:12px 0}
+.home{font-weight:700;color:var(--ink);font-size:1.02rem}
+.home:hover{text-decoration:none;color:var(--accent)}
+.home i{font-family:var(--serif);font-style:normal;color:var(--accent);font-weight:400;margin-left:6px}
+.crumb{font-size:.82rem;color:var(--muted);margin-top:4px}
+.crumb a{color:var(--muted)}
+.crumb span{color:var(--ink);font-weight:600}
+
+.kicker{color:var(--accent);font-weight:700;font-size:.86rem;margin:0 0 2px}
+h1{font-size:1.58rem;margin:0 0 6px;letter-spacing:-.01em}
+h1 .hs{display:block;font-family:var(--mono);font-size:.9rem;font-weight:500;color:var(--muted);margin-top:5px}
+.lede{font-size:1.02rem;margin:10px 0 16px;color:var(--ink)}
+section:first-of-type h2{border-top:none;padding-top:0}
+h2{border-top:1px solid var(--line);padding-top:20px}
+
+table.rates{min-width:760px}
+.rates tbody th{min-width:170px;font-weight:400}
+.rates thead th:first-child{min-width:170px}
+.rates tbody th code{display:block;font-weight:500;color:var(--accent)}
+.rates tbody th span{color:var(--muted);font-size:.86em}
+
+.spark{width:100%;max-width:340px;margin:4px 0}
+.tops{list-style:none;padding:0;margin:10px 0}
+.tops li{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin:4px 0;font-size:.9rem}
+.tops i{display:block;height:14px;border-radius:4px;background:var(--seq-500)}
+.tops b{font-variant-numeric:tabular-nums}
+.syn{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:.92rem;color:var(--ink)}
+.sibs{list-style:none;padding:0;margin:8px 0;columns:2;column-gap:24px}
+.sibs li{break-inside:avoid;margin:3px 0;font-size:.9rem}
+.sibs code{color:var(--muted)}
+.more ul{margin:8px 0;padding-left:20px}
+
+.chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:14px 0}
+.chcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;color:var(--ink);box-shadow:var(--shadow)}
+.chcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.chcard b{display:block;color:var(--accent)}
+.chcard span{display:block;font-size:.86rem;color:var(--muted);margin:2px 0}
+.chcard i{font-style:normal;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+@media(max-width:560px){.sibs{columns:1}h1{font-size:1.32rem}
+.tops li{grid-template-columns:80px 1fr auto}}

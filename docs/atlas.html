@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한국 관세 아틀라스 (프로토타입)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/atlas-base.css">
+<style>
+  /* 이 화면에만 쓰는 것. 토큰과 공용 골격은 assets/atlas-base.css에 있다. */
+
+  /* ---------- 검색 ---------- */
+  .searchbox{display:flex;gap:8px;align-items:center;background:var(--panel);
+    border:2px solid var(--accent);border-radius:12px;padding:6px 8px 6px 14px}
+  .searchbox input{flex:1;border:0;outline:0;font:inherit;font-size:1.05rem;padding:8px 0;
+    background:transparent;color:var(--ink)}
+  .searchbox input::placeholder{color:var(--muted)}
+  .searchbox .cnt{color:var(--muted);font-size:.84rem;white-space:nowrap;padding-right:6px;
+    font-variant-numeric:tabular-nums}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+  .chip{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:5px 12px;
+    font:inherit;font-size:.85rem;cursor:pointer;font-weight:600;color:var(--ink)}
+  .chip:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .hits{margin:14px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+  .synhint{background:var(--accent-soft);border-bottom:1px solid var(--line2);padding:8px 14px;
+    font-size:.84rem;color:var(--ink2)}
+  .synhint b{color:var(--accent)}
+  .hit{display:grid;grid-template-columns:118px 1fr auto;gap:12px;padding:10px 14px;
+    border-bottom:1px solid var(--line);cursor:pointer;align-items:baseline}
+  .hit:last-child{border-bottom:none}
+  .hit:hover{background:var(--panel2)}
+  .hit .c{font-family:var(--mono);font-weight:500;font-size:.86rem;color:var(--accent)}
+  .hit .nm{font-size:.93rem}
+  .hit .pa{color:var(--muted);font-size:.78rem;display:block}
+  .hit .rt{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .hit .rt small{display:block;font-weight:400;color:var(--muted);font-size:.74rem}
+
+  /* ---------- 관세 여권 카드 ---------- */
+  .pp{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);
+    padding:18px 20px;margin:16px 0}
+  .pp h3{border:none;padding:0;margin:0 0 2px;font-size:1.3rem}
+  .pp .ppcode{font-family:var(--mono);color:var(--accent);font-weight:500;font-size:1.02rem}
+  .pp .pppath{color:var(--muted);font-size:.86rem;margin:6px 0 0}
+  .ppgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
+  @media (max-width:760px){.ppgrid{grid-template-columns:1fr}}
+  .ppbox h4{margin:0 0 8px;font-size:.95rem}
+  .bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 10px;align-items:center;font-size:.86rem}
+  .bars .lb{white-space:nowrap;color:var(--ink2)}
+  .bars .tr{height:16px;background:var(--panel2);border-radius:4px;position:relative}
+  .bars .fl{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--seq-500)}
+  .bars .vl{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .bars .best .fl{background:var(--ok)}
+  .bars .best .lb,.bars .best .vl{color:var(--ok);font-weight:700}
+  .breakeven{background:var(--warn-soft);border:1px solid var(--line2);border-left:3px solid var(--warm);
+    border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.87rem}
+
+  /* ---------- 작은 그림 여럿 ---------- */
+  .sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:12px 0}
+  .smc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+  .smc h4{margin:0 0 2px;font-size:.92rem}
+  .smc .v{font-size:1.26rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .smc .v small{font-size:.76rem;font-weight:600;color:var(--muted);margin-left:4px}
+  .ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0}
+
+  @media (max-width:520px){
+    .hit{grid-template-columns:1fr auto}
+    .hit .c{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+
+<header class="atlas-top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>한국 관세 아틀라스</h1>
+      <span class="wordmark">Korea Tariff Atlas</span>
+      <span class="badge">PROTOTYPE</span>
+    </div>
+    <p class="lede">HSK 10단위 코드 하나하나에 대해 <b>어느 나라에서 들여오면 관세가 얼마인지</b>, 그 세율이 <b>20년 동안 어떻게 바뀌었는지</b>, 그리고 <b>실제로 얼마가 그 세율을 만났는지</b>를 함께 보여 준다. 세율은 <a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a>, 무역액은 <a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a>에서 왔다.</p>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="wrap">
+    <div class="tabrow" role="tablist" aria-label="탭">
+      <button role="tab" aria-selected="true"  aria-controls="tab-pp"   id="t-pp">관세 여권</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-map"  id="t-map">실효관세 지도</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-org"  id="t-org">원산지 비교</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-fta"  id="t-fta">FTA 시계</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-chg"  id="t-chg">올해 바뀐 것</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-about" id="t-about">이 시안에 대하여</button>
+    </div>
+  </div>
+</nav>
+
+<main><div class="wrap">
+
+<!-- ================= 관세 여권 ================= -->
+<section role="tabpanel" id="tab-pp" aria-labelledby="t-pp" class="active">
+  <h2 class="h">관세 여권</h2>
+  <p class="sub lead">코드 하나에 대한 모든 것을 카드 한 장으로. 실제 서비스에서는 이 카드가 코드마다 독립된 주소(<code>/hs/0904210000</code>)를 가져 검색엔진에 색인된다 — 방문자를 데려오는 것은 이 페이지들이다.</p>
+
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="HS 코드나 품목명 (예: 0904, 천연가스, 후추, 스마트폰)" autocomplete="off" aria-label="품목 검색">
+    <span class="cnt" id="qcnt"></span>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="hits" id="hits" hidden></div>
+  <div id="ppout"></div>
+</section>
+
+<!-- ================= 실효관세 지도 ================= -->
+<section role="tabpanel" id="tab-map" aria-labelledby="t-map">
+  <h2 class="h">실효관세 지도</h2>
+  <p class="sub lead">한국이 실제로 매기는 관세는 얼마인가. 세율표의 단순평균이 아니라 <b>실제 수입액으로 가중한 값</b>이다 — 이 숫자를 품목별·연도별로 공개하는 곳은 지금 없다.</p>
+
+  <div class="stats" id="headstats"></div>
+
+  <h3>수입가중 실행세율의 20년</h3>
+  <p class="sub">같은 물량에 협정세율을 적용했을 때(실행세율)와 협정이 없었다면 적용됐을 세율(MFN)의 차이가 FTA가 실제로 깎아 낸 몫이다. 세율표 단순평균은 물량과 무관해 거의 움직이지 않는다 — 셋을 같이 봐야 한다.</p>
+  <figure class="fig">
+    <div class="legend" id="lg-series"></div>
+    <div id="ch-series"></div>
+    <figcaption>수입액 가중 = Σ(수입액 × 세율) ÷ Σ(수입액). 세율 미확정 코드는 제외. 무역액은 KCSDB2 <code>fact_trade</code>.</figcaption>
+  </figure>
+  <details class="tv"><summary>표로 보기</summary><div id="tb-series"></div></details>
+
+  <h3>어느 품목이 보호되는가 <span style="font-weight:400;font-size:.9rem;color:var(--muted)">— HS 2단위, <span id="yrlab"></span>년</span></h3>
+  <p class="sub">칸의 넓이는 수입액, 색은 수입가중 실행세율이다. 넓고 옅은 칸(반도체·원유)이 무역의 대부분이고, 좁고 짙은 칸(곡물·과실·육류)에 관세가 몰려 있다.</p>
+  <div class="ramp" id="ramp1"></div>
+  <figure class="fig"><div id="ch-tree"></div>
+    <figcaption>수입액 10억 달러 미만 류는 「기타」로 묶었다. 넓이는 수입액에 비례한다.</figcaption></figure>
+  <details class="tv"><summary>표로 보기</summary><div id="tb-tree"></div></details>
+</section>
+
+<!-- ================= 원산지 비교 ================= -->
+<section role="tabpanel" id="tab-org" aria-labelledby="t-org">
+  <h2 class="h">원산지 비교</h2>
+  <p class="sub lead">같은 물건이라도 어디서 오느냐에 따라 세율이 갈린다. 협정 상대별로 그 나라에서 실제로 들어온 물량에 그 나라 협정세율을 적용한 값이다.</p>
+
+  <h3>상대별 수입가중 실행세율</h3>
+  <div class="ramp" id="ramp2"></div>
+  <figure class="fig"><div id="ch-heat"></div>
+    <figcaption>가로는 연도, 세로는 원산지군. 색이 옅어지는 지점이 협정 발효와 철폐 단계다. 「무협정」은 이 DB가 협정세율을 담지 않은 나라(일본·대만 등)의 MFN 가중치.</figcaption></figure>
+  <details class="tv"><summary>표로 보기</summary><div id="tb-heat"></div></details>
+
+  <h3><span id="yrlab2"></span>년 수입액의 원산지 구성</h3>
+  <figure class="fig"><div id="ch-share"></div>
+    <figcaption>FTA 일곱 상대가 수입액의 절반을 조금 넘는다. 「그 밖」에는 이 DB에 협정세율 열이 없는 상대(일본·대만·호주·RCEP 등)가 모두 들어간다. 베트남은 한-아세안과 한-베트남 두 협정이 겹쳐 아세안에 합산했다.</figcaption></figure>
+</section>
+
+<!-- ================= FTA 시계 ================= -->
+<section role="tabpanel" id="tab-fta" aria-labelledby="t-fta">
+  <h2 class="h">FTA 시계</h2>
+  <p class="sub lead">협정은 발효일에 끝나지 않는다. 품목마다 철폐 일정이 달라 10년, 20년에 걸쳐 0%에 도달한다. 지금 어디까지 왔는지를 상대별로 본다.</p>
+  <div class="ctl">
+    <span class="toggle" role="group" aria-label="기준">
+      <button id="fta-code" aria-pressed="true">코드 수 기준</button>
+      <button id="fta-val"  aria-pressed="false">수입액 기준</button>
+    </span>
+    <span class="sub" style="margin:0" id="fta-note"></span>
+  </div>
+  <div class="sm" id="ch-fta"></div>
+  <details class="tv"><summary>표로 보기</summary><div id="tb-fta"></div></details>
+</section>
+
+<!-- ================= 올해 바뀐 것 ================= -->
+<section role="tabpanel" id="tab-chg" aria-labelledby="t-chg">
+  <h2 class="h">올해 바뀐 것</h2>
+  <p class="sub lead">해가 바뀔 때마다 자동으로 만들어지는 화면이다. 갱신 스크립트를 돌리면 이 목록이 새로 생기고, 그 자체가 그해의 뉴스거리가 된다.</p>
+  <div class="stats" id="chgstats"></div>
+  <div id="tb-chg"></div>
+  <p class="sub">무협정 원산지에 적용되는 실행세율(MFN 기준) 기준. 협정세율의 연간 철폐 단계는 여기 포함하지 않았다 — 실제 서비스에서는 상대별로 따로 보여 주는 편이 낫다.</p>
+</section>
+
+<!-- ================= 이 시안에 대하여 ================= -->
+<section role="tabpanel" id="tab-about" aria-labelledby="t-about">
+  <h2 class="h">이 시안에 대하여</h2>
+  <p class="sub lead">무엇을 보여 주려고 만들었는지, 실제 서비스로 옮길 때 무엇이 달라지는지.</p>
+
+  <div class="note warn">
+    <b>고지.</b> 관세법령정보포털은 10단위 세율이 참고용이며 법적 효력이 없다고 밝힌다. 실행세율은 KCSTARIFF가 관세법 제50조를 해석해 만든 파생값이다. 세액 계산이나 수입신고에는 관세법 별표 관세율표와 해당 규정(조정·할당·양허관세 규정, FTA 협정문)의 원문을 확인해야 한다. 이 화면은 설계 시안이며 검증을 거치지 않았다.
+  </div>
+
+  <h3>어느 계열의 화면인가</h3>
+  <p class="sub">대시보드를 두 갈래로 나눈다. <b>DB 소개형</b>은 「이 자료가 무엇이고 어떻게 만들었나」에 답하고(<a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a>·<a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a>), <b>아틀라스형</b>은 「이 자료로 무엇을 보나」에 답한다(<a href="https://pilsunchoi.github.io/TradeNetworkAtlas/" target="_blank" rel="noopener">Trade Network Atlas</a>·<a href="https://pilsunchoi.github.io/MaritimePulseAtlas/" target="_blank" rel="noopener">Maritime Pulse Atlas</a>). 이 화면은 아틀라스형이고, 앞의 두 아틀라스와 같은 토큰·글꼴을 쓴다.</p>
+  <div class="tblwrap tw"><table>
+    <thead><tr><th>구분</th><th>DB 소개형</th><th>아틀라스형</th></tr></thead>
+    <tbody>
+      <tr><td>답하는 질문</td><td>무엇이고 어떻게 만들었나</td><td>이 자료로 무엇을 보나</td></tr>
+      <tr><td>독자</td><td>연구자·재현하려는 사람</td><td>실무자·기자·일반</td></tr>
+      <tr><td>표면</td><td>밝은 배경, 시스템 글꼴</td><td>다크 <code>#0E1116</code>, Instrument Sans + IBM Plex Sans KR</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub">아틀라스형 안에서도 표면이 둘이다. <b>탐색 도구인 이 화면은 다크</b>, <b>검색으로 들어와 읽고 인쇄하는 코드별 정적 페이지는 같은 토큰의 라이트 변종</b>이다. 자동 반전이 아니라 각각 고른 값이며, 정본은 <code>assets/atlas-base.css</code> 한 파일이다. 다른 아틀라스는 이 파일을 복사해 쓴다 — CDN 링크로 묶지 않아 한 곳이 깨져도 나머지는 산다.</p>
+  <p class="sub">글꼴은 라틴과 한글을 나눠 맡긴다. Instrument Serif·Sans에는 한글이 없어 한글은 IBM Plex Sans KR이 받는다(허브 <a href="https://pilsunchoi.github.io/" target="_blank" rel="noopener">pilsunchoi.github.io</a>와 같은 글꼴). 그래서 영문 이름은 아틀라스 특유의 세리프로, 한글 본문은 또렷한 고딕으로 나온다.</p>
+
+  <h3>이 시안이 증명하려는 것</h3>
+  <ol>
+    <li><b>코드별 페이지가 엔진이다.</b> 「관세 여권」 탭의 카드가 실제 서비스에서는 코드마다 독립 주소를 갖는다. HS10 전부면 11,326쪽, HS6까지만 해도 5,600쪽이 검색엔진에 색인된다. 기존 두 아틀라스가 단일 페이지라 갖지 못한 유입 경로다.</li>
+    <li><b>세율만으로는 부족하고, 무역액과 붙어야 의미가 생긴다.</b> 「이 코드에 작년에 얼마가 들어왔고 어디서 왔는가」가 붙는 순간 세율표가 의사결정 도구가 된다.</li>
+    <li><b>시계열이 차별점이다.</b> CLIP·TradeNAVI·FTA포털은 전부 현재 시점 조회다. 20년 이력은 이 DB에만 있다.</li>
+    <li><b>종량세 손익분기</b>는 어디에도 없는 기능이다. 선택세율 품목에서 신고단가가 하한 아래로 내려가면 종량세가 적용된다는 사실을 계산해 보여 준다.</li>
+  </ol>
+
+  <h3>실제 서비스로 옮길 때 달라지는 것</h3>
+  <ul>
+    <li><b>데이터 적재.</b> 이 시안은 데이터 전부(<span id="dsize"></span>)를 한 파일에 담아 로드한다. 실제로는 <code>fct_applied_rate.parquet</code>(2.2MB)을 DuckDB-WASM으로 브라우저에서 직접 질의하거나, 코드 페이지를 빌드 시점에 정적 생성한다. 어느 쪽이든 서버는 필요 없다.</li>
+    <li><b>파일 하나로 다 담은 탓</b>에 초기 로딩이 무겁다. 실제 서비스에서는 코드 페이지를 빌드 시점에 정적 생성하므로 방문자는 자기가 찾는 코드의 데이터만 받는다.</li>
+    <li><b>관용명 사전은 초안까지 와 있다.</b> 관세율표의 법정 품명만 훑으면 「승용차」로는 아무것도 안 나온다 — 제8703호의 법정 표현은 「승용자동차와 그 밖의 사람을 수송할 수 있도록 주로 설계된 차량」이다. 그래서 사람들이 실제로 치는 말을 코드에 잇는 사전(<code>관용명_사전.csv</code>)을 만들어 붙였다. 항목 <b id="synN"></b>개·검색어 <b id="synW"></b>개로 HSK 코드의 <b id="synC"></b>%, <b id="synV"></b>년 수입액의 <b id="synVp"></b>%를 덮는다. 검색창에 「소고기」·「노트북」·「삼겹살」을 쳐 보면 작동한다. 남은 일은 범위를 넓히고(현재 소비재·1차산품 위주), 실제 검색어 로그로 다듬는 것이다.</li>
+    <li><b>호·소호 명칭</b>은 관세법 별표 관세율표 HWP(2025년 시행판)에서 뽑았다. 류 96개·호 1,228개·소호그룹 1,023개·소호 5,612개 전부를 읽어 빈 곳이 없다. 표의 행마다 칸 수가 달라(소호가 「00」 하나뿐인 호는 호 이름 행이 없고, 소호그룹 행은 세율 칸이 없다) 처음에는 호 271개와 소호 1개를 놓쳤는데, 칸 수를 고정하지 않고 행 머리를 찾는 방식으로 고쳤다.</li>
+    <li><b>월 단위 갱신.</b> 세율은 1월에 한 번 바뀌지만 무역액은 매달 갱신된다. 「이 달의 수입과 관세」를 홈에 두면 KCSDB2 파이프라인에 얹혀 사이트가 매달 살아 움직인다 — 연 1회 갱신 사이트가 죽는 문제의 해법이다.</li>
+  </ul>
+
+  <h3>이 DB가 답하지 못하는 것 — 화면에 명시해야 한다</h3>
+  <ul>
+    <li><b>명목이지 실제가 아니다.</b> 위에서 계산한 관세액은 법정 실행세율 × 수입액이다. 감면·면세·환급·보세가 빠져 있어 실제 관세 수입(연 7~8조원대)보다 훨씬 크다. 「명목 기준, 감면 전」이라고 반드시 붙여야 한다.</li>
+    <li><b>FTA 세율은 신청했을 때 적용될 수 있는 세율</b>이지 실제로 적용된 세율이 아니다. 원산지증명을 못 받아 MFN을 낸 물량이 섞여 있다. 그래서 「절감액」은 상한 추정이다.</li>
+    <li><b>협정 일곱 개만</b> 담겨 있다(중국·EU·미국·아세안·인도·베트남·캐나다 + APTA). 호주·RCEP·영국·중미 등은 주요세율보기 화면에 열이 없어 빠졌다.</li>
+    <li><b>1월 1일 기준</b>이라 하반기에 지정되는 할당관세 같은 연중 변경은 놓칠 수 있다.</li>
+  </ul>
+
+  <h3>쓰인 자료</h3>
+  <div class="tw"><table>
+    <thead><tr><th>구분</th><th>출처</th><th>범위</th></tr></thead>
+    <tbody>
+      <tr><td>세율</td><td>KCSTARIFF <code>fct_applied_rate</code>, <code>tariff_code</code></td><td>2007~2026년, HSK 10단위</td></tr>
+      <tr><td>무역액</td><td>KCSDB2 <code>fact_trade</code></td><td>2007~<span class="tl"></span>, 코드×국가×월</td></tr>
+      <tr><td>국가명</td><td>KCSDB2 <code>dim_country</code></td><td>관세청 통계부호</td></tr>
+      <tr><td>호·소호 명칭</td><td>관세법 별표 관세율표 HWP</td><td>2025-01-01 시행판</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</div></main>
+
+<footer><div class="wrap">
+  <span class="ver">설계 시안 · <span class="gen"></span> 생성</span>
+  <p>세율 <a href="https://github.com/pilsunchoi/KCSTARIFF" target="_blank" rel="noopener">KCSTARIFF</a> · 무역통계 <a href="https://pilsunchoi.github.io/KCSDB2/" target="_blank" rel="noopener">KCSDB2</a> · 원자료 관세청 관세법령정보포털(공공누리 제1유형)</p>
+  <p>이 화면의 수치는 참고용이며 법적 효력이 없다.</p>
+</div></footer>
+
+<div class="tip" id="tip" role="status"></div>
+
+<script src="atlas-data.js"></script>
+<script src="synonyms.js"></script>
+<script>
+(function(){
+"use strict";
+const D = window.ATLAS;
+const FX = 1380;                                     // 환산용 고정 환율(원/달러)
+const C = {}; D.codes.cols.forEach((k,i)=>C[k]=i);
+const ORI = [                                        // 화면에 쓰는 원산지 순서
+  ['mfn','무협정(MFN)'],['cn','중국'],['eu','EU'],['us','미국'],
+  ['asean','아세안'],['vn','베트남'],['in','인도'],['ca','캐나다'],['apta','APTA']];
+const OH_ORDER = ['cn','eu','us','asean','vn','in','ca'];   // ohist 열 순서
+const SEQ = ['--seq-100','--seq-200','--seq-300','--seq-400','--seq-500','--seq-600','--seq-700']
+  .map(v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const BRK = [0.5,1,2,4,8,16];                        // 세율(%) 구간 → 색 단계
+const seqColor = r => SEQ[BRK.findIndex(b=>r<b)===-1?6:BRK.findIndex(b=>r<b)];
+function lum(hex){                                   // 상대 밝기(0~1)
+  const m=/^#?([0-9a-f]{6})$/i.exec(hex.trim()); if(!m) return 0.5;
+  const n=parseInt(m[1],16), f=c=>{c/=255; return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};
+  return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255);
+}
+// 다크·라이트 두 표면을 쓰므로 글자색을 박아 두면 한쪽에서 안 보인다
+const seqInk = r => lum(seqColor(r)) > 0.42 ? '#0E1116' : '#F2F4F8';
+const S1=getCSS('--series-1'), S2=getCSS('--series-2'), S3=getCSS('--series-3');
+function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+
+const fmt = (n,d=1)=> n==null||isNaN(n) ? '—' : n.toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = n => n==null ? '—' : (n===0 ? '0%' : fmt(n,n<10?2:1)+'%');
+const musd = n => n==null ? '—' : n===0 ? '0' :
+  n>=100 ? fmt(n/100, n>=1000?0:1)+'억 달러' : n>=1 ? fmt(n,1)+'백만 달러' : fmt(n*100,0)+'만 달러';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const el = (h)=>{const d=document.createElement('div'); d.innerHTML=h.trim(); return d.firstChild};
+
+/* ---------------- 탭 ---------------- */
+const tabs=[...document.querySelectorAll('.tabrow button')];
+function showTab(id){
+  tabs.forEach(b=>{const on=b.getAttribute('aria-controls')==='tab-'+id;
+    b.setAttribute('aria-selected',on);
+    document.getElementById(b.getAttribute('aria-controls')).classList.toggle('active',on);});
+  window.scrollTo({top:0,behavior:'instant'});
+}
+tabs.forEach(b=>b.onclick=()=>showTab(b.getAttribute('aria-controls').slice(4)));
+
+/* ---------------- 툴팁 ---------------- */
+const tip=document.getElementById('tip');
+function showTip(e,html){tip.innerHTML=html; tip.style.opacity=1;
+  const r=tip.getBoundingClientRect();
+  let x=e.clientX+14, y=e.clientY-10;
+  if(x+r.width>innerWidth-8) x=e.clientX-r.width-14;
+  if(y+r.height>innerHeight-8) y=innerHeight-r.height-8;
+  tip.style.left=x+'px'; tip.style.top=Math.max(8,y)+'px';}
+function hideTip(){tip.style.opacity=0}
+document.addEventListener('scroll',hideTip,true);
+
+/* ---------------- SVG 도우미 ---------------- */
+function svg(w,h,cls){const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  s.setAttribute('viewBox',`0 0 ${w} ${h}`); s.setAttribute('width','100%');
+  s.setAttribute('preserveAspectRatio','xMidYMid meet'); if(cls)s.setAttribute('class',cls); return s}
+function n(t,a,p){const e=document.createElementNS('http://www.w3.org/2000/svg',t);
+  // SVG 표현속성에 var()를 넣으면 엔진에 따라 안 먹는다(Safari) — style로 넘긴다
+  let st='';
+  for(const k in a){const v=a[k];
+    if(typeof v==='string' && v.indexOf('var(')===0){st+=k+':'+v+';'; continue}
+    e.setAttribute(k,v);}
+  if(st) e.setAttribute('style',st);
+  if(p)p.appendChild(e); return e}
+function txt(p,x,y,s,o={}){const e=n('text',Object.assign({x,y,'font-size':o.fs||11,
+  fill:o.fill||'var(--muted)','text-anchor':o.ta||'start','font-weight':o.fw||400,
+  'dominant-baseline':o.db||'auto'},o.extra||{}),p); e.textContent=s; return e}
+
+/* ================= 이름 계층 ================= */
+const NM=D.names;
+function pathOf(hs){
+  // 소호가 하나뿐인 호는 호 이름이 소호 이름과 같다 — 같은 말을 두 번 쓰지 않는다
+  const seen=new Set();
+  return [NM.h4[hs.slice(0,4)],NM.h5[hs.slice(0,5)],NM.h6[hs.slice(0,6)]]
+    .filter(v=>v && !seen.has(v) && seen.add(v)!==null).join(' › ');
+}
+function chapOf(hs){return NM.h2[hs.slice(0,2)]||''}
+// 10단위 품명은 「기타」처럼 그 자체로는 뜻이 없는 경우가 많다 — 윗단계 이름을 앞에 붙인다
+function nameOf(hs,leaf){
+  const gen=t=>/^(기타|그 밖의 것|신차|중고차)$/.test((t||'').trim());
+  if(!gen(leaf)) return leaf||'';
+  const up=[NM.h6[hs.slice(0,6)],NM.h5[hs.slice(0,5)],NM.h4[hs.slice(0,4)]].find(t=>t&&!gen(t));
+  return up ? (up.length>44?up.slice(0,44)+'…':up)+' 중 '+leaf : leaf;
+}
+
+/* ================= 검색 색인 ================= */
+const ROWS=D.codes.rows;
+// 관용명 사전: 대상 코드 접두사 → 그 말들. 법정 품명에 없는 말로도 찾게 한다.
+const SYN=window.SYN||[];
+const SYNPFX=new Map();
+SYN.forEach(([words,targets])=>targets.forEach(t=>
+  SYNPFX.set(t,(SYNPFX.get(t)||'')+' '+words.join(' ').toLowerCase())));
+function synOf(hs){
+  let x='';
+  for(let L=2;L<=10;L++){const v=SYNPFX.get(hs.slice(0,L)); if(v) x+=v}
+  return x;
+}
+const KEY=ROWS.map(r=>(r[C.hs10]+' '+r[C.leaf]+' '+pathOf(r[C.hs10])+' '+chapOf(r[C.hs10])
+  +synOf(r[C.hs10])).toLowerCase());
+const qIn=document.getElementById('q'), hitsEl=document.getElementById('hits'),
+      cntEl=document.getElementById('qcnt'), ppOut=document.getElementById('ppout');
+
+function search(s){
+  s=s.trim().toLowerCase(); if(!s) return [];
+  const terms=s.split(/\s+/), out=[];
+  for(let i=0;i<KEY.length;i++){
+    let ok=true; for(const t of terms) if(KEY[i].indexOf(t)<0){ok=false;break}
+    if(ok) out.push(i);
+  }
+  // 코드 접두 일치 → 사전이 지목한 코드 → 그 밖의 글자 일치, 같은 층에서는 수입액 순.
+  // 사전 층이 없으면 「콜라」가 「콜라주(제9701호)」에 밀린다.
+  const pfx=[...synPfx(s)];
+  const tier=i=>{const h=ROWS[i][C.hs10];
+    return h.startsWith(s) ? 0 : pfx.some(p=>h.startsWith(p)) ? 1 : 2};
+  out.sort((a,b)=>tier(a)-tier(b) || ROWS[b][C.imp_musd]-ROWS[a][C.imp_musd]);
+  return out;
+}
+// 질의에 걸린 사전 항목. 「다이아몬드」가 「아몬드」를 끌어오지 않도록
+// 앞걸림(사전어가 질의를 품음)이 하나라도 있으면 뒷걸림은 버린다.
+function synMatch(s){
+  const q=s.toLowerCase(), fwd=[], rev=[];
+  SYN.forEach(([words,targets])=>{
+    const f=words.find(w=>w.toLowerCase().indexOf(q)>=0);
+    if(f) return fwd.push([words[0],f,targets]);
+    const r=words.find(w=>{const lw=w.toLowerCase(); return lw.length>=2 && q.indexOf(lw)>=0});
+    if(r) rev.push([words[0],r,targets]);
+  });
+  return fwd.length?fwd:rev;
+}
+function synPfx(s){
+  const p=new Set(); synMatch(s).forEach(([,,tg])=>tg.forEach(t=>p.add(t))); return p;
+}
+function synHint(s){
+  const hit=synMatch(s);
+  if(!hit.length) return '';
+  return '<div class="synhint">관용명 사전 — '+hit.slice(0,4).map(([t,w,tg])=>
+    `<b>${esc(w)}</b>${w===t?'':' ('+esc(t)+')'} → 제${tg.map(x=>x.slice(0,4)).filter((v,i,a)=>a.indexOf(v)===i).join('·')}호`
+  ).join(' · ')+(hit.length>4?` 외 ${hit.length-4}건`:'')+'</div>';
+}
+function renderHits(idx,s){
+  cntEl.textContent = s ? idx.length.toLocaleString('ko-KR')+'건' : '';
+  if(!s){hitsEl.hidden=true; return}
+  hitsEl.hidden=false;
+  const hint=synHint(s);
+  if(!idx.length){hitsEl.innerHTML=hint+'<div class="hit"><div></div><div class="nm">일치하는 코드가 없다.</div><div></div></div>'; return}
+  hitsEl.innerHTML = hint + idx.slice(0,40).map(i=>{const r=ROWS[i];
+    return `<div class="hit" data-i="${i}">
+      <div class="c">${r[C.hs10].replace(/(\d{4})(\d{2})(\d{4})/,'$1.$2.$3')}</div>
+      <div><span class="nm">${esc(nameOf(r[C.hs10],r[C.leaf]))}</span><span class="pa">${esc(chapOf(r[C.hs10]))} · ${esc(pathOf(r[C.hs10])||'—')}</span></div>
+      <div class="rt">${pct(r[C.mfn])}<small>${r[C.imp_musd]>0?musd(r[C.imp_musd]):'수입 없음'}</small></div>
+    </div>`}).join('') + (idx.length>40?`<div class="hit"><div></div><div class="nm" style="color:var(--muted)">… 외 ${(idx.length-40).toLocaleString('ko-KR')}건. 검색어를 좁혀 보라.</div><div></div></div>`:'');
+  hitsEl.querySelectorAll('.hit[data-i]').forEach(d=>d.onclick=()=>openCard(+d.dataset.i));
+}
+let tmr; qIn.addEventListener('input',()=>{clearTimeout(tmr);
+  tmr=setTimeout(()=>{const s=qIn.value.trim(); renderHits(search(s),s)},120)});
+
+/* 예시 칩 */
+const DEMO=[['2711110000','천연가스'],['0904210000','건고추'],['8703231010','승용차(가솔린 1.5~3L 신차)'],
+            ['8517130000','스마트폰'],['2203000000','맥주'],['0901210000','볶은 커피'],['1006301000','멥쌀']];
+document.getElementById('chips').innerHTML = DEMO.map(([c,l])=>`<button class="chip" data-c="${c}">${l}</button>`).join('');
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+  const i=ROWS.findIndex(r=>r[C.hs10]===b.dataset.c);
+  if(i>=0){qIn.value=''; hitsEl.hidden=true; cntEl.textContent=''; openCard(i)}});
+
+/* ================= 관세 여권 카드 ================= */
+function parseHist(s){ if(!s) return [];
+  return s.split(';').filter(Boolean).map(t=>{const [y,v]=t.split(':'); return [2000+ +y, +v]})}
+function parseOHist(s){ if(!s) return [];
+  return s.split('|').map(t=>{const [y,vs]=t.split(':');
+    return [2000+ +y, vs.split(',').map(v=>v===''?null:+v)]})}
+
+function openCard(i){
+  const r=ROWS[i], hs=r[C.hs10], fl=r[C.flags];
+  const rates=ORI.map(([k,l])=>[l,r[C[k]]]);
+  const valid=rates.filter(x=>x[1]!=null).map(x=>x[1]);
+  const lo=valid.length?Math.min(...valid):0, hi=valid.length?Math.max(...valid):0;
+  const spread=hi>lo, scale=hi||1;
+  const badges=[];
+  if(fl&1)  badges.push(['warn','TRQ · 양허관세 추천 필요']);
+  if(fl&2)  badges.push(['fail','덤핑방지관세 있음']);
+  if(fl&4)  badges.push(['info','종량세']);
+  if(fl&8)  badges.push(['info','종량 하한(선택세율)']);
+  if(fl&32) badges.push(['ok','할당관세 지정']);
+  if(fl&16) badges.push(['fail','세율 미확정']);
+  if(!badges.length) badges.push(['ok','종가세 · 단순 구조']);
+
+  const top3=r[C.top3]||[], t3max=top3.length?top3[0][1]:1;
+  const hist=parseHist(r[C.hist]), ohist=parseOHist(r[C.ohist]);
+
+  let be='';
+  if(r[C.spec]!=null && r[C.floor]!=null){
+    const up = r[C.usdkg]!=null ? r[C.usdkg]*FX : null;
+    const under = up!=null && up < r[C.floor];
+    be=`<div class="breakeven"><b>종량세 손익분기.</b> 신고단가가 <b>${fmt(r[C.floor],0)}원/kg</b> 밑으로 내려가면 종가세 대신 <b>${fmt(r[C.spec],0)}원/kg</b>의 종량세가 적용된다.
+      ${up!=null?`${D.meta.trade_year}년 실제 수입단가는 약 <b>${fmt(up,0)}원/kg</b>(${fmt(r[C.usdkg],2)}달러/kg, 환율 ${FX.toLocaleString('ko-KR')}원 가정)로 하한 ${under?'<b>아래</b> — 종량세가 적용될 구간이다':'위 — 종가세 구간이다'}.`:''}</div>`;
+  }
+
+  ppOut.innerHTML=`<div class="pp">
+    <div class="ppcode">${hs.replace(/(\d{4})(\d{2})(\d{4})/,'$1.$2.$3')}</div>
+    <h3>${esc(nameOf(hs,r[C.leaf])||'(품명 없음)')}</h3>
+    <p class="pppath">${esc(chapOf(hs))}${pathOf(hs)?' › '+esc(pathOf(hs)):''}</p>
+    <div class="badges">${badges.map(([k,t])=>`<span class="pill ${k}">${t}</span>`).join('')}</div>
+    <div class="ppgrid">
+      <div class="ppbox">
+        <h4>${D.meta.year}년 원산지별 실행세율</h4>
+        <div class="bars">${rates.map(([l,v])=>{
+          const best = spread && v!=null && v===lo;
+          return `<span class="lb ${best?'best':''}">${l}</span>
+            <span class="tr ${best?'best':''}"><span class="fl" style="width:${v==null?0:Math.max(1.5,100*v/scale)}%;${best?'background:var(--ok)':''}"></span></span>
+            <span class="vl ${best?'best':''}">${pct(v)}</span>`}).join('')}</div>
+        ${spread?`<p class="cap">최저 세율 원산지에서 들여오면 무협정 대비 <b>${fmt(rates[0][1]-lo,1)}%p</b>를 아낀다.</p>`
+          :`<p class="cap">원산지에 관계없이 ${pct(lo)}로 같다${lo===0?' — 이미 전면 무관세인 품목이다':''}.</p>`}
+        ${be}
+        ${r[C.txt]?`<p class="cap">화면 문구: <code>${esc(r[C.txt])}</code></p>`:''}
+      </div>
+      <div class="ppbox">
+        <h4>${D.meta.trade_year}년 수입 실적</h4>
+        ${r[C.imp_musd]>0?`<p style="margin:0 0 8px"><b style="font-size:1.3rem">${musd(r[C.imp_musd])}</b>
+          <span class="cap" style="display:inline"> · 명목 관세 약 ${musd(r[C.imp_musd]*(rates[0][1]||0)/100)}(무협정 기준)</span></p>
+        <div class="bars">${top3.map(([ci,v])=>`<span class="lb">${esc(D.countries[ci])}</span>
+          <span class="tr"><span class="fl" style="width:${Math.max(2,100*v/t3max)}%"></span></span>
+          <span class="vl">${musd(v)}</span>`).join('')}</div>
+        <p class="cap">상위 3개국. 실제 서비스에서는 전체 원산지와 월별 추이를 붙인다.</p>`
+        :'<p class="cap">이 코드로 신고된 수입이 없다.</p>'}
+        <h4 style="margin-top:16px">세율 이력 ${ohist.length?'(원산지별)':'(무협정 기준)'}</h4>
+        <div id="pphist"></div>
+      </div>
+    </div>
+    <p class="cap" style="margin-top:14px">실제 서비스에서는 이 카드가 <code>/hs/${hs}</code> 주소를 갖고, 아래에 관련 코드·법령 근거·원문 링크가 붙는다.</p>
+  </div>`;
+  drawHist(document.getElementById('pphist'), hist, ohist, r);
+  location.hash='hs='+hs;
+  ppOut.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function drawHist(host,hist,ohist,r){
+  const W=460,H=200,P={t:12,r:96,b:24,l:34};
+  const Y0=2007, Y1=D.meta.year;
+  const YRS=[]; for(let y=Y0;y<=Y1;y++) YRS.push(y);
+  const at=(h,y)=>{const p=h.filter(p=>p[0]<=y).pop(); return p?p[1]:null};
+  host.innerHTML='';
+  if(!hist.length && !ohist.length){host.innerHTML='<p class="cap">이력 자료가 없다.</p>'; return}
+
+  // 원산지별 계열을 값이 같은 것끼리 묶는다 — 겹쳐 그리면 라벨만 엉킨다
+  const mfnSig=YRS.map(y=>at(hist,y)).join(',');
+  const groups=new Map();
+  const NAMES={cn:'중국',eu:'EU',us:'미국',asean:'아세안',vn:'베트남',in:'인도',ca:'캐나다'};
+  OH_ORDER.forEach((k,j)=>{
+    if(!ohist.length) return;
+    const h=ohist.map(([y,vs])=>[y,vs[j]]).filter(p=>p[1]!=null);
+    if(!h.length) return;
+    const sig=YRS.map(y=>at(h,y)).join(',');
+    if(!groups.has(sig)) groups.set(sig,{names:[],h});
+    groups.get(sig).names.push(NAMES[k]);
+  });
+  const same=groups.get(mfnSig);            // 무협정과 값이 같은 상대는 한 선에 합친다
+  if(same) groups.delete(mfnSig);
+  const label=a=>a.length<=2?a.join('·'):a.slice(0,2).join('·')+' 외 '+(a.length-2);
+
+  const series=[];
+  if(hist.length) series.push({name:'무협정'+(same?' 외 '+same.names.length:''),
+    color:'var(--muted)',pts:stepFill(hist,Y0,Y1),dash:'4 3'});
+  [...groups.values()].slice(0,3).forEach((g,i)=>
+    series.push({name:label(g.names),color:[S1,S2,S3][i],pts:stepFill(g.h,Y0,Y1)}));
+  if(!series.length){host.innerHTML='<p class="cap">이력 자료가 없다.</p>'; return}
+  const s=svg(W,H); host.appendChild(s);
+  const raw=Math.max(...series.flatMap(x=>x.pts.map(p=>p[1])),1);
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const maxY=Math.ceil(raw/(mag/2))*(mag/2) || 1;
+  const X=y=>P.l+(y-Y0)/(Y1-Y0)*(W-P.l-P.r), Yc=v=>H-P.b-(v/maxY)*(H-P.t-P.b);
+  // 축
+  [0,maxY/2,maxY].forEach(v=>{n('line',{x1:P.l,x2:W-P.r,y1:Yc(v),y2:Yc(v),stroke:'var(--grid)','stroke-width':1},s);
+    txt(s,P.l-5,Yc(v)+3,v>=10?Math.round(v):v.toFixed(1),{ta:'end',fs:10})});
+  [Y0,2013,2019,Y1].forEach(y=>txt(s,X(y),H-7,String(y).slice(2)+'년',{ta:'middle',fs:10}));
+  const labs=[];
+  series.forEach(se=>{
+    const d=se.pts.map((p,i)=>(i?'L':'M')+X(p[0])+' '+Yc(p[1])).join(' ');
+    n('path',{d,fill:'none',stroke:se.color,'stroke-width':2,'stroke-linejoin':'round',
+      'stroke-dasharray':se.dash||''},s);
+    const last=se.pts[se.pts.length-1];
+    labs.push({name:se.name,color:se.color,x:X(last[0])+5,y:Yc(last[1])+3});
+  });
+  labs.sort((a,b)=>a.y-b.y);                    // 라벨이 겹치면 벌리고, 넘치면 전체를 위로 민다
+  for(let i=1;i<labs.length;i++) labs[i].y=Math.max(labs[i].y,labs[i-1].y+11);
+  const over=labs.length?labs[labs.length-1].y-(H-P.b):0;
+  if(over>0) labs.forEach(l=>l.y-=over);
+  labs.forEach(l=>txt(s,l.x,Math.max(P.t+8,l.y),l.name,{fs:10,fill:l.color,fw:700}));
+  // 호버
+  const hit=n('rect',{x:P.l,y:P.t,width:W-P.l-P.r,height:H-P.t-P.b,fill:'transparent'},s);
+  hit.addEventListener('mousemove',e=>{
+    const bb=s.getBoundingClientRect(), rx=(e.clientX-bb.left)/bb.width*W;
+    const y=Math.round(Y0+(rx-P.l)/(W-P.l-P.r)*(Y1-Y0));
+    if(y<Y0||y>Y1) return hideTip();
+    showTip(e,`<b>${y}년</b><br>`+series.map(se=>{
+      const p=se.pts.filter(p=>p[0]<=y).pop();
+      return `<span class="k">${se.name}</span> ${p?pct(p[1]):'—'}`}).join('<br>'));
+  });
+  hit.addEventListener('mouseleave',hideTip);
+}
+function stepFill(h,y0,y1){
+  const out=[];
+  for(let k=0;k<h.length;k++){
+    if(h[k][0]>y1) break;
+    const end = k+1<h.length ? Math.min(h[k+1][0],y1) : y1;
+    out.push([Math.max(h[k][0],y0), h[k][1]]);
+    out.push([end, h[k][1]]);
+  }
+  return out;
+}
+
+/* ================= 실효관세 지도 ================= */
+const HD=D.head;
+document.getElementById('headstats').innerHTML=[
+  [fmt(HD.imports_bn*10,0)+'억 달러', HD.year+'년 수입액', '세율이 확정된 코드'],
+  [pct(HD.applied), '수입가중 실행세율', '협정세율 적용 후'],
+  [pct(HD.mfn), '수입가중 MFN 세율', '협정이 없었다면'],
+  ['약 '+fmt(HD.duty_bn*FX/1000,0)+'조원', '명목 관세액', '감면·환급 전 — 실제 관세 수입은 이보다 훨씬 적다'],
+  ['약 '+fmt(HD.saving_bn*FX/1000,0)+'조원', '협정으로 깎인 몫', 'FTA를 100% 활용했다고 가정한 상한'],
+].map(([a,b,c])=>`<div class="stat"><div class="n">${a}</div><div class="k">${b}</div><div class="d">${c}</div></div>`).join('');
+document.getElementById('yrlab').textContent=HD.year;
+document.getElementById('yrlab2').textContent=HD.year;
+
+// --- 시계열 라인 ---
+(function(){
+  const S=D.series, W=880,H=300,P={t:16,r:74,b:30,l:44};
+  const ys=S.map(r=>r[0]), Y0=ys[0], Y1=ys[ys.length-1];
+  const defs=[['수입가중 실행세율',2,S1],['수입가중 MFN 세율',3,S2],['세율표 단순평균 MFN',4,S3]];
+  const maxY=Math.ceil(Math.max(...defs.flatMap(([,i])=>S.map(r=>r[i])))/2)*2+1;
+  const s=svg(W,H); const host=document.getElementById('ch-series'); host.appendChild(s);
+  const X=y=>P.l+(y-Y0)/(Y1-Y0)*(W-P.l-P.r), Yc=v=>H-P.b-(v/maxY)*(H-P.t-P.b);
+  for(let v=0;v<=maxY;v+=2){n('line',{x1:P.l,x2:W-P.r,y1:Yc(v),y2:Yc(v),stroke:'var(--grid)'},s);
+    txt(s,P.l-6,Yc(v)+3,v+'%',{ta:'end',fs:11})}
+  ys.forEach(y=>{if(y%3===1||y===Y1) txt(s,X(y),H-9,y,{ta:'middle',fs:11})});
+  defs.forEach(([nm,i,col])=>{
+    const d=S.map((r,k)=>(k?'L':'M')+X(r[0])+' '+Yc(r[i])).join(' ');
+    n('path',{d,fill:'none',stroke:col,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'},s);
+    const last=S[S.length-1];
+    n('circle',{cx:X(last[0]),cy:Yc(last[i]),r:3.5,fill:col,stroke:'var(--panel)','stroke-width':2},s);
+    txt(s,X(last[0])+7,Yc(last[i])+4,pct(last[i]),{fs:11,fill:col,fw:700});
+  });
+  const cross=n('line',{x1:0,x2:0,y1:P.t,y2:H-P.b,stroke:'var(--axis)','stroke-width':1,opacity:0},s);
+  const hit=n('rect',{x:P.l,y:P.t,width:W-P.l-P.r,height:H-P.t-P.b,fill:'transparent'},s);
+  hit.addEventListener('mousemove',e=>{
+    const bb=s.getBoundingClientRect(), rx=(e.clientX-bb.left)/bb.width*W;
+    const y=Math.min(Y1,Math.max(Y0,Math.round(Y0+(rx-P.l)/(W-P.l-P.r)*(Y1-Y0))));
+    const r=S.find(r=>r[0]===y); if(!r) return;
+    cross.setAttribute('x1',X(y)); cross.setAttribute('x2',X(y)); cross.setAttribute('opacity',1);
+    showTip(e,`<b>${y}년</b> · 수입 ${fmt(r[1]*10,0)}억$<br>`+
+      defs.map(([nm,i,col])=>`<span class="k">${nm}</span> ${pct(r[i])}`).join('<br>'));
+  });
+  hit.addEventListener('mouseleave',()=>{cross.setAttribute('opacity',0); hideTip()});
+  document.getElementById('lg-series').innerHTML=defs.map(([nm,,c])=>
+    `<span><i style="background:${c}"></i>${nm}</span>`).join('');
+  document.getElementById('tb-series').innerHTML=tbl(
+    ['연도','수입액(억$)','실행세율','MFN','단순평균 MFN'],
+    S.map(r=>[r[0],fmt(r[1]*10,0),pct(r[2]),pct(r[3]),pct(r[4])]),[0,1,1,1,1]);
+})();
+
+// --- 트리맵 ---
+(function(){
+  let items=D.hs2.map(([c,nm,bn,ap,mf])=>({c,nm,v:bn,ap,mf}));
+  const small=items.filter(x=>x.v<1), big=items.filter(x=>x.v>=1);
+  if(small.length){const v=small.reduce((a,b)=>a+b.v,0);
+    big.push({c:'—',nm:`기타 ${small.length}개 류`,v,
+      ap:small.reduce((a,b)=>a+b.ap*b.v,0)/v, mf:small.reduce((a,b)=>a+b.mf*b.v,0)/v})}
+  items=big.sort((a,b)=>b.v-a.v);
+  const W=880,H=440, s=svg(W,H); document.getElementById('ch-tree').appendChild(s);
+  const tot=items.reduce((a,b)=>a+b.v,0);
+  squarify(items.map(x=>Object.assign({},x,{a:x.v/tot*W*H})),{x:0,y:0,w:W,h:H}).forEach(r=>{
+    const d=r.d;
+    const g=n('g',{},s);
+    n('rect',{x:r.x+1,y:r.y+1,width:Math.max(0,r.w-2),height:Math.max(0,r.h-2),rx:3,
+      fill:seqColor(d.ap),stroke:'var(--bg)','stroke-width':2},g);
+    if(r.w>56&&r.h>30){
+      txt(g,r.x+8,r.y+18,d.c==='—'?'기타':d.c+'류',{fs:12,fw:700,fill:seqInk(d.ap)});
+      if(r.h>46) txt(g,r.x+8,r.y+33,pct(d.ap),{fs:11,fill:seqInk(d.ap),extra:{opacity:.85}});
+      if(r.w>120&&r.h>62) txt(g,r.x+8,r.y+48,fmt(d.v*10,0)+'억$',{fs:10,fill:seqInk(d.ap),extra:{opacity:.7}});
+    }
+    g.addEventListener('mousemove',e=>showTip(e,
+      `<b>${d.c==='—'?'기타':'제'+d.c+'류'}</b> ${esc(d.nm)}<br>
+       <span class="k">수입액</span> ${fmt(d.v*10,0)}억 달러<br>
+       <span class="k">실행세율</span> ${pct(d.ap)} <span class="k">· MFN</span> ${pct(d.mf)}`));
+    g.addEventListener('mouseleave',hideTip);
+  });
+  document.getElementById('ramp1').innerHTML=rampHTML();
+  document.getElementById('ramp2').innerHTML=rampHTML();
+  document.getElementById('tb-tree').innerHTML=tbl(['류','품명','수입액(억$)','실행세율','MFN'],
+    items.map(x=>[x.c,x.nm,fmt(x.v*10,0),pct(x.ap),pct(x.mf)]),[0,0,1,1,1]);
+})();
+function rampHTML(){
+  const lb=['0','0.5','1','2','4','8','16%+'];
+  return '<span>실행세율</span>'+SEQ.map((c,i)=>`<i style="background:${c}" title="${lb[i]}"></i>`).join('')+
+    '<span>낮음 → 높음</span>';
+}
+function squarify(items,rect){
+  const out=[]; let row=[], r=Object.assign({},rect);
+  const short=()=>Math.min(r.w,r.h);
+  const worst=(row,w)=>{const s=row.reduce((a,b)=>a+b.a,0);
+    const mx=Math.max(...row.map(x=>x.a)), mn=Math.min(...row.map(x=>x.a));
+    return Math.max(w*w*mx/(s*s), s*s/(w*w*mn))};
+  const lay=row=>{
+    const s=row.reduce((a,b)=>a+b.a,0), horiz=r.w>=r.h;
+    const th = horiz ? s/r.h : s/r.w;
+    let o=0;
+    row.forEach(it=>{const len = horiz ? it.a/th : it.a/th;
+      out.push(horiz?{x:r.x,y:r.y+o,w:th,h:len,d:it}:{x:r.x+o,y:r.y,w:len,h:th,d:it}); o+=len});
+    if(horiz){r.x+=th; r.w-=th} else {r.y+=th; r.h-=th}
+  };
+  items=items.filter(x=>x.a>0);
+  for(const it of items){
+    if(!row.length){row=[it]; continue}
+    if(worst(row.concat(it),short())<=worst(row,short())) row.push(it);
+    else {lay(row); row=[it]}
+  }
+  if(row.length) lay(row);
+  return out;
+}
+function tbl(head,rows,right){
+  return `<div class="tw"><table><thead><tr>${head.map((h,i)=>
+    `<th class="${right&&right[i]?'r':''}">${h}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r=>'<tr>'+r.map((c,i)=>`<td class="${right&&right[i]?'r':''}">${esc(c)}</td>`).join('')+'</tr>').join('')
+  }</tbody></table></div>`;
+}
+
+/* ================= 원산지 히트맵 ================= */
+(function(){
+  const R=D.regime.rows, YS=D.regime.years;
+  const cw=Math.min(40,(880-110)/YS.length), ch=30, W=110+cw*YS.length, H=26+ch*R.length+18;
+  const s=svg(W,H); document.getElementById('ch-heat').appendChild(s);
+  YS.forEach((y,j)=>{if(y%3===1||j===YS.length-1) txt(s,110+cw*j+cw/2,16,String(y).slice(2),{ta:'middle',fs:10})});
+  R.forEach((row,i)=>{
+    txt(s,104,26+ch*i+ch/2+4,row[1],{ta:'end',fs:11,fill:'var(--ink)',fw:600});
+    row[2].forEach((v,j)=>{
+      const g=n('g',{},s);
+      n('rect',{x:110+cw*j+1,y:26+ch*i+1,width:cw-2,height:ch-2,rx:3,
+        fill:v==null?'var(--panel2)':seqColor(v)},g);
+      if(cw>=30&&v!=null) txt(g,110+cw*j+cw/2,26+ch*i+ch/2+4,v>=10?Math.round(v):v.toFixed(1),
+        {ta:'middle',fs:9.5,fill:seqInk(v),fw:600});
+      g.addEventListener('mousemove',e=>showTip(e,
+        `<b>${row[1]}</b> · ${YS[j]}년<br><span class="k">수입가중 실행세율</span> ${pct(v)}`));
+      g.addEventListener('mouseleave',hideTip);
+    });
+  });
+  document.getElementById('tb-heat').innerHTML=tbl(['원산지군',...YS.map(String)],
+    R.map(r=>[r[1],...r[2].map(v=>v==null?'—':pct(v))]), [0,...YS.map(()=>1)]);
+})();
+
+/* ================= 원산지 구성 ================= */
+(function(){
+  const LB={FCN1:'중국',FEU1:'EU',FUS1:'미국',FAS1:'아세안(베트남 포함)',FVN1:'베트남',FIN1:'인도',FCA1:'캐나다',NONE:'그 밖(협정세율 없음)'};
+  const rows=D.shares.map(([k,v])=>[LB[k]||k,v]).sort((a,b)=>b[1]-a[1]);
+  const tot=rows.reduce((a,b)=>a+b[1],0), W=880,H=64;
+  const s=svg(W,H); document.getElementById('ch-share').appendChild(s);
+  let x=0;
+  rows.forEach((r,i)=>{
+    const w=r[1]/tot*W, isNone=r[0].startsWith('그 밖');
+    const g=n('g',{},s);
+    n('rect',{x:x+1,y:0,width:Math.max(0,w-2),height:26,rx:3,
+      fill:isNone?'var(--muted)':SEQ[Math.max(1,6-i)]},g);
+    if(w>52){txt(g,x+w/2,44,r[0],{ta:'middle',fs:10.5,fw:600,fill:'var(--ink)'});
+             txt(g,x+w/2,57,(100*r[1]/tot).toFixed(1)+'%',{ta:'middle',fs:10})}
+    g.addEventListener('mousemove',e=>showTip(e,
+      `<b>${r[0]}</b><br><span class="k">수입액</span> ${fmt(r[1]*10,0)}억 달러 (${(100*r[1]/tot).toFixed(1)}%)`));
+    g.addEventListener('mouseleave',hideTip);
+    x+=w;
+  });
+})();
+
+/* ================= FTA 시계 ================= */
+(function(){
+  const YS=D.fta.years, host=document.getElementById('ch-fta');
+  let mode='code';
+  function draw(){
+    host.innerHTML='';
+    D.fta.rows.forEach(row=>{
+      const vals = mode==='code' ? row[2] : row[3];
+      const pts=[]; vals.forEach((v,i)=>{if(v!=null) pts.push([YS[i],v])});
+      const last=pts.length?pts[pts.length-1]:null;
+      const card=el(`<div class="smc"><h4>${row[1]}</h4>
+        <div class="v">${last?fmt(last[1],1)+'%':'—'}<small>${last?last[0]+'년':''}</small></div></div>`);
+      const W=200,H=64,P={t:6,r:4,b:4,l:4};
+      const s=svg(W,H); card.appendChild(s);
+      if(pts.length>1){
+        const X=y=>P.l+(y-YS[0])/(YS[YS.length-1]-YS[0])*(W-P.l-P.r), Yc=v=>H-P.b-(v/100)*(H-P.t-P.b);
+        n('path',{d:pts.map((p,i)=>(i?'L':'M')+X(p[0])+' '+Yc(p[1])).join(' ')+
+          `L${X(pts[pts.length-1][0])} ${H-P.b} L${X(pts[0][0])} ${H-P.b} Z`,
+          fill:S1,opacity:.13},s);
+        n('path',{d:pts.map((p,i)=>(i?'L':'M')+X(p[0])+' '+Yc(p[1])).join(' '),
+          fill:'none',stroke:S1,'stroke-width':2,'stroke-linejoin':'round'},s);
+        n('circle',{cx:X(last[0]),cy:Yc(last[1]),r:3,fill:S1,stroke:'var(--panel)','stroke-width':1.5},s);
+        const hit=n('rect',{x:0,y:0,width:W,height:H,fill:'transparent'},s);
+        hit.addEventListener('mousemove',e=>{
+          const bb=s.getBoundingClientRect(), rx=(e.clientX-bb.left)/bb.width*W;
+          const y=Math.round(YS[0]+(rx-P.l)/(W-P.l-P.r)*(YS[YS.length-1]-YS[0]));
+          const p=pts.filter(p=>p[0]<=y).pop();
+          showTip(e,`<b>${row[1]}</b> · ${y}년<br><span class="k">무관세 ${mode==='code'?'코드':'수입액'} 비율</span> ${p?fmt(p[1],1)+'%':'—'}`);
+        });
+        hit.addEventListener('mouseleave',hideTip);
+      }
+      host.appendChild(card);
+    });
+    document.getElementById('fta-note').textContent = mode==='code'
+      ? '실행세율이 0%인 코드의 비율(2007~'+YS[YS.length-1]+'년, 세로축 0~100%). 발효 전 구간은 협정과 무관하게 기본·WTO 세율이 이미 0%인 코드다.'
+      : '그 상대에서 온 수입액 중 협정세율이 0%인 코드로 들어온 금액의 비율.';
+    document.getElementById('tb-fta').innerHTML=tbl(['상대',...YS.map(String)],
+      D.fta.rows.map(r=>{const v=mode==='code'?r[2]:r[3];
+        return [r[1],...YS.map((y,i)=>v[i]==null?'—':fmt(v[i],1)+'%')]}),
+      [0,...YS.map(()=>1)]);
+  }
+  const bc=document.getElementById('fta-code'), bv=document.getElementById('fta-val');
+  bc.onclick=()=>{mode='code'; bc.setAttribute('aria-pressed',true); bv.setAttribute('aria-pressed',false); draw()};
+  bv.onclick=()=>{mode='val';  bc.setAttribute('aria-pressed',false); bv.setAttribute('aria-pressed',true); draw()};
+  draw();
+})();
+
+/* ================= 올해 바뀐 것 ================= */
+(function(){
+  const CH=D.changes;
+  document.getElementById('chgstats').innerHTML=[
+    [CH.down+'개', '세율이 내린 코드', CH.from+'년 → '+CH.to+'년'],
+    [CH.up+'개', '세율이 오른 코드', CH.from+'년 → '+CH.to+'년'],
+    [musd(CH.rows.reduce((a,r)=>a+r[3],0)), '변경 코드의 수입액', D.meta.trade_year+'년, 표에 실린 상위 40개 합'],
+  ].map(([a,b,c])=>`<div class="stat"><div class="n">${a}</div><div class="k">${b}</div><div class="d">${c}</div></div>`).join('');
+  const idx={}; ROWS.forEach((r,i)=>idx[r[C.hs10]]=i);
+  document.getElementById('tb-chg').innerHTML=tbl(
+    ['HS10','품명',CH.from+'년',CH.to+'년','변화',D.meta.trade_year+'년 수입액'],
+    CH.rows.map(([hs,o,nw,imp])=>{const i=idx[hs];
+      return [hs.replace(/(\d{4})(\d{2})(\d{4})/,'$1.$2.$3'),
+        i!=null?nameOf(hs,ROWS[i][C.leaf]):'', pct(o), pct(nw),
+        (nw>o?'▲ +':'▼ ')+fmt(nw-o,1)+'%p', musd(imp)]}),
+    [0,0,1,1,1,1]);
+})();
+
+/* ================= 기타 ================= */
+document.querySelectorAll('.gen').forEach(e=>e.textContent=new Date().toISOString().slice(0,10));
+document.querySelectorAll('.tl').forEach(e=>{const t=String(D.meta.trade_last);
+  e.textContent=t.slice(0,4)+'년 '+(+t.slice(4))+'월'});
+document.getElementById('dsize').textContent='약 4.2MB';
+(function(){                                     // 관용명 사전 규모를 About 탭에 채운다
+  const nW=SYN.reduce((a,[w])=>a+w.length,0);
+  let nC=0, vC=0, vT=0;
+  ROWS.forEach(r=>{const v=r[C.imp_musd]||0; vT+=v;
+    if(synOf(r[C.hs10]).trim()){nC++; vC+=v}});
+  const put=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v};
+  put('synN',SYN.length); put('synW',nW); put('synC',(100*nC/ROWS.length).toFixed(1));
+  put('synV',D.meta.trade_year); put('synVp',(100*vC/vT).toFixed(1));
+})();
+
+// 해시로 들어온 코드 열기
+(function(){const m=/hs=(\d{10})/.exec(location.hash);
+  let i = m ? ROWS.findIndex(r=>r[C.hs10]===m[1]) : -1;
+  if(i<0) i=ROWS.findIndex(r=>r[C.hs10]==='2711110000');
+  if(i>=0) openCard(i);
+})();
+})();
+</script>
+</body>
+</html>
