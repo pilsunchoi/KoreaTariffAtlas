@@ -114,8 +114,9 @@ upx = dict(q(f"select hs10, round(sum(dlr)/sum(wgt),4) from imp where year={YR} 
 top = {}
 for hs, cd, nm, d in q(f"""select hs10, stat_cd, name_ko_kcs, dlr from (
     select i.hs10, i.stat_cd, c.name_ko_kcs, i.dlr,
-      row_number() over (partition by i.hs10 order by i.dlr desc) rn
-    from imp i left join k.dim_country c on c.stat_cd=i.stat_cd where i.year={YR}) where rn<=3"""):
+      row_number() over (partition by i.hs10 order by i.dlr desc, i.stat_cd) rn
+    from imp i left join k.dim_country c on c.stat_cd=i.stat_cd where i.year={YR})
+  where rn<=3 order by hs10, rn"""):
     top.setdefault(hs, []).append([nm or cd, round(d / 1e6, 2)])
 
 # MFN 이력: 변화 시점만 (연도 끝 2자리:값)

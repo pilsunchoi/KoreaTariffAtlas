@@ -46,9 +46,12 @@ UPX = dict(q(f"""select hs10, sum(imp_dlr)/sum(imp_wgt) from k.fact_trade
 TOP6 = defaultdict(list)                       # HS6 → [(국가, 금액)] 상위 5
 for h6, nm, cd, v in q(f"""select h6, name_ko_kcs, stat_cd, dlr from (
     select substr(f.hs10,1,6) h6, c.name_ko_kcs, f.stat_cd, sum(f.imp_dlr) dlr,
-      row_number() over (partition by substr(f.hs10,1,6) order by sum(f.imp_dlr) desc) rn
+      row_number() over (partition by substr(f.hs10,1,6) order by sum(f.imp_dlr) desc, f.stat_cd) rn
     from k.fact_trade f left join k.dim_country c on c.stat_cd=f.stat_cd
-    where f.yyyymm between {YR}01 and {YR}12 and f.imp_dlr>0 group by 1,2,3) where rn<=5"""):
+    where f.yyyymm between {YR}01 and {YR}12 and f.imp_dlr>0 group by 1,2,3)
+  where rn<=5 order by h6, rn"""):
+    # 바깥 select에 order by가 없으면 순서가 실행마다 뒤섞인다 — 막대 너비가 tops[0]을
+    # 최댓값으로 보기 때문에 1위가 뒤로 밀리면 230% 같은 값이 나온다
     TOP6[h6].append((nm or cd, v))
 
 HIST = defaultdict(list)                       # hs10 → [(연도, {열: 값})] 변화 시점만
@@ -63,7 +66,7 @@ for r in q(f"""select hs10, year, {','.join(OCOL)} from t.fct_applied_rate
 SYN6 = defaultdict(list)                       # HS6 → 관용명 전부
 SYN6P = defaultdict(list)                      # HS6 → 대표 관용명만(제목용)
 try:
-    for row in csv.DictReader(open(os.path.join(DATA, '관용명_사전.csv'), encoding='utf-8-sig')):
+    for row in csv.DictReader(open(os.path.join(DATA, 'synonyms.csv'), encoding='utf-8-sig')):
         words = [row['term']] + [a for a in (row['aliases'] or '').split('|') if a]
         for tg in row['target'].split('|'):
             tg = tg.strip()
@@ -72,7 +75,7 @@ try:
                 if row['term'] not in SYN6P[h6]:
                     SYN6P[h6].append(row['term'])
 except FileNotFoundError:
-    print('관용명_사전.csv 없음 — 관용명 없이 만든다', file=sys.stderr)
+    print('synonyms.csv 없음 — 관용명 없이 만든다', file=sys.stderr)
 
 H6 = defaultdict(list)
 for hs in CODES:
@@ -104,6 +107,8 @@ def usd(v):                                    # 달러 금액을 한국어 단�
         return '—'
     if v >= 1e8:
         return f'{v/1e8:,.0f}억 달러' if v >= 1e9 else f'{v/1e8:,.1f}억 달러'
+    if v < 1e4:                                # 「0만 달러」로 적히던 구간
+        return f'{v:,.0f}달러'
     return f'{v/1e4:,.0f}만 달러'
 
 def name6(h6):

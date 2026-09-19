@@ -1,6 +1,6 @@
-# 관용명_사전.csv를 검증하고 검색용 synonyms.js를 만든다.
+# synonyms.csv를 검증하고 검색용 synonyms.js를 만든다.
 #   python scripts/build_synonyms.py
-# 출력: synonyms.js (window.SYN), 관용명_사전_검증.csv (행마다 판정)
+# 출력: synonyms.js (window.SYN), synonyms_check.csv (행마다 판정)
 import csv, json, os, sys, unicodedata
 import duckdb
 
@@ -39,7 +39,7 @@ def name_of(pfx):
 
 rows, seen, problems = [], {}, 0
 syn, covered = [], set()
-with open(os.path.join(DATA, '관용명_사전.csv'), encoding='utf-8-sig') as f:
+with open(os.path.join(DATA, 'synonyms.csv'), encoding='utf-8-sig') as f:
     for r in csv.DictReader(f):
         term = r['term'].strip()
         if not term:
@@ -79,7 +79,7 @@ with open(os.path.join(DATA, '관용명_사전.csv'), encoding='utf-8-sig') as f
         if hits:
             syn.append([words, targets])
 
-out = os.path.join(DATA, '관용명_사전_검증.csv')
+out = os.path.join(DATA, 'synonyms_check.csv')
 with open(out, 'w', encoding='utf-8-sig', newline='') as f:
     w = csv.writer(f)
     w.writerow(['term', 'aliases', 'target', '코드수', '수입액_백만달러', '수입몫_%',
@@ -99,7 +99,7 @@ for h in ALLC:
     gap.setdefault(h[:4], [0, 0])
     gap[h[:4]][0] += imp.get(h, 0)
     gap[h[:4]][1] += 1
-with open(os.path.join(DATA, '관용명_사전_빈칸.csv'), 'w', encoding='utf-8-sig', newline='') as f:
+with open(os.path.join(DATA, 'synonyms_gaps.csv'), 'w', encoding='utf-8-sig', newline='') as f:
     w = csv.writer(f)
     w.writerow(['hs4', '수입액_백만달러', '미등록_코드수', '류', '호_법정명칭'])
     for h4, (v, n) in sorted(gap.items(), key=lambda x: -x[1][0])[:150]:
