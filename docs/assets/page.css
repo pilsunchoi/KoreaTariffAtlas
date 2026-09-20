@@ -9,7 +9,9 @@
 .crumb span{color:var(--ink);font-weight:600}
 
 .kicker{color:var(--accent);font-weight:700;font-size:.86rem;margin:0 0 2px}
-h1{font-size:1.58rem;margin:0 0 6px;letter-spacing:-.01em}
+/* 품명이 길어질 수 있으므로 좁은 화면에서는 제목이 줄어든다 */
+h1{font-size:clamp(1.24rem,1.06rem + .8vw,1.58rem);margin:0 0 6px;letter-spacing:-.01em;line-height:1.3}
+.ctx{color:var(--muted);font-size:.88rem;margin:8px 0 0;line-height:1.5}
 h1 .hs{display:block;font-family:var(--mono);font-size:.9rem;font-weight:500;color:var(--muted);margin-top:5px}
 .lede{font-size:1.02rem;margin:10px 0 16px;color:var(--ink)}
 section:first-of-type h2{border-top:none;padding-top:0}

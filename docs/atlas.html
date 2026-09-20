@@ -498,7 +498,7 @@ function drawHist(host,hist,ohist,r){
   });
   const same=groups.get(mfnSig);            // 무협정과 값이 같은 상대는 한 선에 합친다
   if(same) groups.delete(mfnSig);
-  const label=a=>a.length<=2?a.join('·'):a.slice(0,2).join('·')+' 외 '+(a.length-2);
+  const label=a=>a.length<=2?a.join(' · '):a.slice(0,2).join(' · ')+' 외 '+(a.length-2);
 
   const series=[];
   if(hist.length) series.push({name:'무협정'+(same?' 외 '+same.names.length:''),

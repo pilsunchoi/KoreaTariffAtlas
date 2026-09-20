@@ -124,6 +124,8 @@ def title6(h6):
         return f'{up} 중 {nm}'
     return nm
 
+# 화면에 찍는 목록 구분자는 앞뒤에 공백을 준다. Instrument Sans의 가운뎃점은 폭이
+# 1.7px뿐이라 14px 한글 사이에 끼면 눈에 띄지 않는다(2026-09-21 측정).
 def cut(t, n):                                 # 자를 때는 말 끝을 알린다
     t = t or ''
     return t if len(t) <= n else t[:n - 1].rstrip('([·, ') + '…'
@@ -131,6 +133,26 @@ def cut(t, n):                                 # 자를 때는 말 끝을 알린
 def short6(h6, n=52):                          # <title>·목록용 짧은 이름
     t = title6(h6)
     return cut(t, n)
+
+def head6(h6, n=70):
+    """화면 제목. 소호 이름만 쓴다 — 계통까지 합치면 중위 52자, 길게는 919자가 되어
+    제목 크기로 찍으면 글자 벽이 된다. 「기타」처럼 혼자 뜻이 안 서는 것만 윗단계를 붙인다."""
+    nm = NM['h6'].get(h6)
+    if not nm:
+        return cut(NM['h5'].get(h6[:5]) or NM['h4'].get(h6[:4]) or f'제{h6[:4]}호', n)
+    if nm.strip() in ('기타', '그 밖의 것'):
+        up = NM['h5'].get(h6[:5]) or NM['h4'].get(h6[:4])
+        if up:
+            return cut(f'{cut(up, 34)} 중 {nm}', n)
+    return cut(nm, n)
+
+def ctx6(h6):
+    """제목 밑에 작게 붙는 계통. 제목에서 덜어 낸 말이 여기서 온전히 남는다."""
+    out, seen = [], set()
+    for v in (NM['h4'].get(h6[:4]), NM['h5'].get(h6[:5]), NM['h6'].get(h6)):
+        if v and v not in seen:
+            out.append(v); seen.add(v)
+    return ' › '.join(out)
 
 def chain(h6):                                 # 계층 이름 — 중복은 접는다
     out, seen = [], set()
@@ -227,7 +249,7 @@ def lede(h6, hs10s):
         parts.append(f'협정이 없는 나라에서 들여오면 <b>{pct(mfn)}</b>')
     free = [lb for col, lb in ORI[1:] if c['rate'].get(col) == 0]
     if free and mfn:
-        parts.append(f'{"·".join(free[:5])}산은 <b>0%</b>')
+        parts.append(f'{" · ".join(free[:5])}산은 <b>0%</b>')
     elif not free:
         low = [(v, lb) for col, lb in ORI[1:] if (v := c['rate'].get(col)) is not None and mfn is not None and v < mfn]
         if low:
@@ -246,7 +268,7 @@ def lede(h6, hs10s):
               f'kg당 {c["spec"]:,.0f}원의 종량세가 적용된다. ')
     syn = sorted(set(SYN6.get(h6, [])))[:6]
     if syn:
-        s += f'흔히 {E("·".join(syn))}라고 부르는 물품이 여기에 들어간다. '
+        s += f'흔히 {E(" · ".join(syn))}라고 부르는 물품이 여기에 들어간다. '
     if len(hs10s) > 1:
         s += f'아래 10단위 코드 {len(hs10s)}개로 나뉜다.'
     return s
@@ -317,13 +339,14 @@ for h6, hs10s in sorted(H6.items()):
     mfn = CODES[rep]['rate']['mfn']
     free = [lb for col, lb in ORI[1:] if CODES[rep]['rate'].get(col) == 0]
     desc = (f'HS {dot(h6)} {short6(h6, 40)}의 {YMAX}년 관세율. 무협정 {pct(mfn)}'
-            + (f', {"·".join(free[:3])} 0%' if free else '')
+            + (f', {" · ".join(free[:3])} 0%' if free else '')
             + (f'. {YR}년 수입 {usd(v)}' if v else '')
-            + (f'. {"·".join(syn[:5])}.' if syn else '.')
+            + (f'. {" · ".join(syn[:5])}.' if syn else '.')
             + f' {Y0}년부터의 세율 이력과 원산지별 비교.')
     sibs = [x for x in H4[h6[:4]] if x != h6]
-    body = [(f'<p class="kicker">{E("·".join(SYN6P.get(h6, [])[:4]))}</p>' if SYN6P.get(h6) else '')
-            + f'<h1>{E(nm)} <span class="hs">HS {dot(h6)}</span></h1>',
+    body = [(f'<p class="kicker">{E(" · ".join(SYN6P.get(h6, [])[:4]))}</p>' if SYN6P.get(h6) else '')
+            + f'<h1>{E(head6(h6))} <span class="hs">HS {dot(h6)}</span></h1>'
+            + f'<p class="ctx">{E(ctx6(h6))}</p>',
             f'<p class="lede">{lede(h6, hs10s)}</p>']
     bg = badges(hs10s)
     if bg:
@@ -354,7 +377,7 @@ for h6, hs10s in sorted(H6.items()):
                 f'<li><a href="{APP}#hs={hs10s[0]}">대화형 대시보드에서 이 코드 열기</a></li>'
                 f'<li><a href="https://unipass.customs.go.kr/clip/">관세법령정보포털(CLIP) 원문 확인</a></li>'
                 f'<li><a href="ch{h6[:2]}.html">제{int(h6[:2])}류 전체</a></li></ul></section>')
-    lead = '·'.join(SYN6P.get(h6, [])[:2])
+    lead = ' · '.join(SYN6P.get(h6, [])[:2])
     ttl = (f'{lead} 관세율 — {short6(h6, 34)} (HS {dot(h6)}) | 한국 관세 아틀라스' if lead
            else f'{short6(h6, 42)} 관세율 — HS {dot(h6)} | 한국 관세 아틀라스')
     total += shell(f'hs/{h6}.html', ttl,
@@ -451,7 +474,9 @@ CSS = """/* 코드 페이지 전용. 토큰과 공용 골격은 atlas-base.css�
 .crumb span{color:var(--ink);font-weight:600}
 
 .kicker{color:var(--accent);font-weight:700;font-size:.86rem;margin:0 0 2px}
-h1{font-size:1.58rem;margin:0 0 6px;letter-spacing:-.01em}
+/* 품명이 길어질 수 있으므로 좁은 화면에서는 제목이 줄어든다 */
+h1{font-size:clamp(1.24rem,1.06rem + .8vw,1.58rem);margin:0 0 6px;letter-spacing:-.01em;line-height:1.3}
+.ctx{color:var(--muted);font-size:.88rem;margin:8px 0 0;line-height:1.5}
 h1 .hs{display:block;font-family:var(--mono);font-size:.9rem;font-weight:500;color:var(--muted);margin-top:5px}
 .lede{font-size:1.02rem;margin:10px 0 16px;color:var(--ink)}
 section:first-of-type h2{border-top:none;padding-top:0}
